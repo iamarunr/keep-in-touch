@@ -1,7 +1,7 @@
 /* Service worker: makes the app open instantly and work offline.
  * App files: served from cache, refreshed in the background (stale-while-revalidate).
  * Bump VERSION whenever you want every installed copy to drop its old cache. */
-const VERSION = "kit-v7";
+const VERSION = "kit-v8";
 // Files shared to the app (Android share sheet) wait here until the Import screen picks them up.
 // Its own cache, so a version bump in between doesn't drop a share.
 const SHARE_CACHE = "kit-share";
