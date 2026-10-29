@@ -124,6 +124,7 @@ aside.drawer.on{transform:none}
 <div class="wrap">
   <header class="top">
     <div class="row"><h1 class="grow">Keep in Touch</h1><button class="btn" id="installBtn" hidden>Install app</button></div>
+    <div id="installHelp" hidden></div>
     <p class="sub">A list every 3 weeks · B every 2 months · C every 6 months · D once a year</p>
   </header>
   <nav class="tabs" id="tabs"></nav>
@@ -852,14 +853,37 @@ go();
 if("serviceWorker" in navigator&&location.protocol!=="file:"){
   window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(e=>console.error(e)));
 }
-window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;$("#installBtn").hidden=false;});
-$("#installBtn").addEventListener("click",async()=>{
-  if(!installEvt) return;
-  installEvt.prompt();
-  try{await installEvt.userChoice;}catch(e){}
-  installEvt=null;$("#installBtn").hidden=true;
+const isStandalone=()=>(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone===true;
+function installSteps(){
+  const ua=navigator.userAgent;
+  const ios=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1);
+  if(ios) return "Tap the Share button (the square with an arrow), then “Add to Home Screen”.";
+  if(/Android/.test(ua)){
+    if(/Firefox/.test(ua)) return "Tap the ⋮ menu, then “Install” (or “Add to Home screen”).";
+    if(/SamsungBrowser/.test(ua)) return "Tap the menu (≡), then “Add page to” → “Home screen”.";
+    return "Tap Chrome’s ⋮ menu, then “Add to Home screen” → “Install”. If you only see “Create shortcut”, reload the page once and try again.";
+  }
+  if(/Firefox/.test(ua)) return "Firefox on desktop can’t install web apps. Open this page in Chrome, Edge or Safari instead.";
+  if(/Safari/.test(ua)&&!/Chrome|Chromium|Edg/.test(ua)) return "In Safari’s menu bar, choose File → Add to Dock.";
+  return "Click the install icon at the right end of the address bar, or open the browser menu and choose “Install”.";
+}
+const installBtn=$("#installBtn"), installHelp=$("#installHelp");
+if(!isStandalone()) installBtn.hidden=false;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;installBtn.hidden=isStandalone();});
+installBtn.addEventListener("click",async()=>{
+  if(installEvt){
+    installEvt.prompt();
+    try{const r=await installEvt.userChoice; if(r&&r.outcome==="accepted") installBtn.hidden=true;}catch(e){}
+    installEvt=null;
+    return;
+  }
+  if(!installHelp.hidden){installHelp.hidden=true;return;}
+  installHelp.replaceChildren(h("div",{class:"banner row",style:"margin:12px 0 0"},
+    h("span",{class:"grow"},h("b",{},"Install Keep in Touch: "),installSteps()),
+    h("button",{class:"btn ghost small",onclick:()=>{installHelp.hidden=true;}},"✕")));
+  installHelp.hidden=false;
 });
-window.addEventListener("appinstalled",()=>{$("#installBtn").hidden=true;toast("Installed. Find Keep in Touch on your home screen.");});
+window.addEventListener("appinstalled",()=>{installBtn.hidden=true;installHelp.hidden=true;toast("Installed. Find Keep in Touch on your home screen.");});
 </script>
 </body>
 </html>
