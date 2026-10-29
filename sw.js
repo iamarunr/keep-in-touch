@@ -1,10 +1,9 @@
 /* Service worker: makes the app open instantly and work offline.
  * App files: served from cache, refreshed in the background (stale-while-revalidate).
  * Bump VERSION whenever you want every installed copy to drop its old cache. */
-const VERSION = "kit-v1";
+const VERSION = "kit-v2";
 const SHELL = [
   "./",
-  "./index.html",
   "./store.js",
   "./manifest.webmanifest",
   "./icons/icon.svg",
@@ -37,7 +36,9 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.open(VERSION).then(async (cache) => {
       // Navigations (opening the app, with or without #hash) all resolve to the app shell.
-      const key = req.mode === "navigate" ? "./index.html" : req;
+      // Keyed on "./" rather than "./index.html": hosts like Cloudflare Pages redirect
+      // /index.html to /, and a redirected response can't answer a navigation.
+      const key = req.mode === "navigate" ? "./" : req;
       const cached = await cache.match(key, { ignoreSearch: req.mode === "navigate" });
       const network = fetch(req)
         .then((res) => {
