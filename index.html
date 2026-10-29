@@ -94,6 +94,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .daygrp{margin-bottom:16px}
 .daygrp h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 6px;font-weight:600}
 .empty{text-align:center;padding:40px 16px;color:var(--muted)}
+.empty a{color:var(--accent)}
 .empty b{display:block;font-family:Fraunces,Georgia,serif;font-size:22px;color:var(--ink);font-weight:500;margin-bottom:6px}
 .tierhelp{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
 .tierhelp div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px}
@@ -140,7 +141,7 @@ aside.drawer.on{transform:none}
 <script>
 "use strict";
 /* ---------- constants ---------- */
-const APP_VERSION="7";
+const APP_VERSION="8";
 const TIERS = ["A","B","C","D"];
 const TIER_LABEL = {A:"Very important",B:"Important",C:"Most people",D:"Demoted"};
 const DEF = {cad:{A:21,B:60,C:182,D:365}, goal:3};
