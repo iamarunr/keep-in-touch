@@ -588,6 +588,7 @@ V.import={
         return {...r,dup,on:!dup};
       });
       drawPrev();
+      requestAnimationFrame(()=>prev.scrollIntoView({behavior:"smooth",block:"start"}));
     };
     const drawPrev=()=>{
       prev.replaceChildren();
@@ -597,6 +598,8 @@ V.import={
       const allBox=h("input",{type:"checkbox",checked:rows.every(r=>r.on),onchange:e=>{rows.forEach(r=>r.on=e.target.checked);drawPrev();}});
       prev.append(
         h("div",{class:"section"},h("h4",{},"Preview · "+rows.length+" found"+(nDup?" · "+nDup+" already in your list (unticked)":""))),
+        h("p",{class:"hint"},"Not saved yet. Tap Import to add them."),
+        h("div",{class:"row",style:"margin-bottom:14px"},btn,h("span",{class:"meta",id:"impprog"})),
         h("div",{class:"grid2"},
           h("label",{class:"f"},h("span",{},"Tier for rows without one"),tierSelect(st.def,e=>{st.def=e.target.value;})),
           h("div",{})),
@@ -612,8 +615,7 @@ V.import={
             h("td",{class:"meta"},(r.tags||[]).join(", ")),
             h("td",{},h("select",{onchange:e=>{r.tier=e.target.value;}},h("option",{value:"",selected:!r.tier?true:null},"default"),TIERS.map(x=>h("option",{value:x,selected:r.tier===x?true:null},x))))
           ))))),
-        rows.length>1000?h("p",{class:"hint"},"Only the first 1,000 rows will be imported."):"",
-        h("div",{class:"row"},btn,h("span",{class:"meta",id:"impprog"}))
+        rows.length>1000?h("p",{class:"hint"},"Only the first 1,000 rows will be imported."):""
       );
     };
     async function doImport(){
