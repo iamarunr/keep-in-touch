@@ -1,7 +1,7 @@
 /* Service worker: makes the app open instantly and work offline.
  * App files: served from cache, refreshed in the background (stale-while-revalidate).
  * Bump VERSION whenever you want every installed copy to drop its old cache. */
-const VERSION = "kit-v5";
+const VERSION = "kit-v6";
 const SHELL = [
   "./",
   "./store.js",
