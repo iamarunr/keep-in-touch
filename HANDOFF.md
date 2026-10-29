@@ -8,7 +8,7 @@ A personal keep-in-touch app, based on Derek Sivers' "Stay in touch with hundred
 
 - **Live:** https://keep-in-touch-d58.pages.dev/ (Cloudflare Pages, auto-deploys on push to `main`)
 - **Repo:** https://github.com/iamarunr/keep-in-touch
-- **Version shown in Settings:** 6 (`APP_VERSION` in index.html, `VERSION` in sw.js is `kit-v6`)
+- **Version shown in Settings:** 7 (`APP_VERSION` in index.html, `VERSION` in sw.js is `kit-v7`)
 
 ## How we got here
 
@@ -34,6 +34,7 @@ index.html             The whole UI: CSS + one script. Views: #today #upcoming #
 store.js               LocalDB: IndexedDB-backed document store (doc/collection/get/set/update/delete/onSnapshot/limit).
                        Same API shape the claude.ai version used, so the UI code didn't change. Syncs tabs via BroadcastChannel.
 sw.js                  Service worker: cache-first app shell with background refresh. Bump VERSION on every release.
+                       Also catches the share-target POST (see below).
 manifest.webmanifest   Installability (name, icons, standalone, shortcuts)
 _headers               Cloudflare Pages headers (sw.js no-cache, manifest content type)
 icons/                 SVG source + PNGs (192, 512, maskable 512, apple-touch 180)
@@ -87,12 +88,14 @@ Tests cover:
 - install button text per browser and hidden in standalone mode
 - iPhone-size vCard import with the button visible
 - one-launch updates
+- sharing a `.vcf` to the app (multipart POST to the share target, through the service worker) → Import preview → saved
 - preview-address banner (shown on `<hash>.keep-in-touch-d58.pages.dev`, not on the main address or localhost)
 
 Screenshots go to `tests/output/` (gitignored).
 
 **Not yet verified on a real device:**
 - the Android Contact Picker (it's mocked in tests)
+- sharing a `.vcf` from another Android app (Web Share Target; simulated with a form POST in tests). Only works once the app is installed.
 - the one-launch update path on iOS
 - WebKit (Playwright's WebKit wasn't available in the build environment, so iPhone was emulated with Chromium)
 
@@ -102,6 +105,6 @@ Screenshots go to `tests/output/` (gitignored).
 - [ ] Try the real Contact Picker on the Pixel (Import → Choose contacts).
 - [x] Warn when the app is opened on a Cloudflare preview address (`<hash>.keep-in-touch-d58.pages.dev`), since data there is separate. (Version 6: a banner links to the main address; `isPreviewHost()` in index.html, tests set `window.KIT_TEST_HOST`.)
 - [ ] Optional **sync**: Cloudflare Worker (static assets) + D1 with a private passphrase. `store.js` is the single seam to swap or extend.
-- [ ] Optional: Web Share Target so a `.vcf` shared from another app opens straight into Import (Android).
+- [x] Web Share Target so a `.vcf` shared from another app opens straight into Import (Android). (Version 7: `share_target` in the manifest POSTs to `./share-target`; `sw.js` keeps the file in the `kit-share` cache and 303s to `./#import`, where `takeSharedFile()` feeds it into the normal vCard import.) **Still needs checking on a real Android device:** install the app, then share a contact from Contacts and pick Keep in Touch.
 - [ ] Optional: per-person "check-in message" templates or reminders (notifications would need a server or periodic background sync).
 - [ ] Optional: custom domain on Cloudflare.
