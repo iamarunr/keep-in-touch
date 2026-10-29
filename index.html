@@ -139,6 +139,7 @@ aside.drawer.on{transform:none}
 <script>
 "use strict";
 /* ---------- constants ---------- */
+const APP_VERSION="5";
 const TIERS = ["A","B","C","D"];
 const TIER_LABEL = {A:"Very important",B:"Important",C:"Most people",D:"Demoted"};
 const DEF = {cad:{A:21,B:60,C:182,D:365}, goal:3};
@@ -762,7 +763,7 @@ function paintBackupStatus(){
 }
 async function storageInfo(){
   const box=$("#storageinfo"); if(!box) return;
-  let txt="Stored on this device only.";
+  let txt="Version "+APP_VERSION+". Stored on this device only.";
   try{
     if(navigator.storage&&navigator.storage.persisted){
       const p=await navigator.storage.persisted();
@@ -853,7 +854,14 @@ go();
 
 /* ---------- installable app ---------- */
 if("serviceWorker" in navigator&&location.protocol!=="file:"){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(e=>console.error(e)));
+  // When an update installs, reload once so the new version shows on this open, not the next.
+  const hadController=!!navigator.serviceWorker.controller;
+  let reloading=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{
+    if(!hadController||reloading) return;
+    reloading=true; location.reload();
+  });
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").then(r=>r.update()).catch(e=>console.error(e)));
 }
 const isStandalone=()=>(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone===true;
 function installSteps(){
