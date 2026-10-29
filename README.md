@@ -20,9 +20,15 @@ When you check in, just find out how they're doing and see if you can help.
 - **Weekly goal:** counts new people met this week (Sivers' "meet three new people every week").
 - **Backup & restore:** one-tap JSON backup (share it straight to Google Drive on Android), restore on any device, and CSV export.
 
+Live at **https://keep-in-touch-d58.pages.dev/** (Cloudflare Pages, deploys on every push to `main`).
+
 ## Install it on your phone
 
-Open the site in Chrome on Android, then tap **Install app** in the header (or ⋮ → *Add to Home screen*). On iPhone, use Safari → Share → *Add to Home Screen*.
+Open the site and tap **Install app** in the header. It uses the browser's install prompt where there is one, and otherwise shows the steps for your browser:
+- **Android Chrome:** ⋮ → *Add to Home screen* → *Install*.
+- **iPhone:** Share → *Add to Home Screen*.
+
+On iPhone, the Home Screen app keeps its own data, separate from Safari, so use only one of them.
 
 ## Where the data lives
 
@@ -39,9 +45,16 @@ Picking phone contacts uses the browser's [Contact Picker API](https://developer
 ```
 index.html             the whole app (HTML, CSS, JS)
 store.js               on-device document store on top of IndexedDB
-sw.js                  service worker for offline use (bump VERSION to refresh caches)
+sw.js                  service worker for offline use
 manifest.webmanifest   makes it installable
+_headers               Cloudflare Pages headers
 icons/                 app icons
+tests/                 Playwright end-to-end tests + local server
+HANDOFF.md             project history, architecture, open items
 ```
 
-No build step and no dependencies. Serve the folder with any static host. To run it locally: `python3 -m http.server` and open http://localhost:8000.
+No build step and no runtime dependencies. Run it locally with `python3 tests/serve.py`, then open http://127.0.0.1:8766/.
+
+Run the tests with `npm install && npx playwright install chromium && npm test`.
+
+For each release, bump `APP_VERSION` in index.html and `VERSION` in sw.js. Settings shows the running version.

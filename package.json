@@ -1,0 +1,12 @@
+{
+  "name": "keep-in-touch",
+  "private": true,
+  "description": "Personal keep-in-touch CRM (installable web app). No build step; these scripts are only for tests.",
+  "scripts": {
+    "serve": "python3 tests/serve.py",
+    "test": "bash tests/run.sh"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.0"
+  }
+}
