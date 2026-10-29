@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 python3 serve.py & SERVER=$!
 trap 'kill $SERVER 2>/dev/null' EXIT
 sleep 1
-for t in e2e install-button iphone-import update preview-banner; do
+for t in e2e install-button iphone-import share-target update preview-banner; do
   echo "== $t"
   node "$t.test.js"
 done

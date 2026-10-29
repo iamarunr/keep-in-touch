@@ -140,7 +140,7 @@ aside.drawer.on{transform:none}
 <script>
 "use strict";
 /* ---------- constants ---------- */
-const APP_VERSION="6";
+const APP_VERSION="7";
 const TIERS = ["A","B","C","D"];
 const TIER_LABEL = {A:"Very important",B:"Important",C:"Most people",D:"Demoted"};
 const DEF = {cad:{A:21,B:60,C:182,D:365}, goal:3};
@@ -583,6 +583,15 @@ function fromPaste(text){
   }
   return out;
 }
+async function takeSharedFile(){
+  try{
+    if(!window.caches) return null;
+    const cache=await caches.open("kit-share");
+    const res=await cache.match("./shared-contacts"); if(!res) return null;
+    await cache.delete("./shared-contacts");
+    return await res.text();
+  }catch(e){console.error(e);return null;}
+}
 V.import={
   build(m){
     const st={def:"C",spread:true,busy:false};
@@ -662,13 +671,18 @@ V.import={
         h("p",{class:"hint",style:"margin:0 0 10px"},"Google Contacts: Export → Google CSV. iPhone/Mac Contacts: select all → Export vCard. Outlook CSV works too. Columns named tier, tags, city and notes are picked up automatically."),
         file),
       prev);
-    file.addEventListener("change",async()=>{
-      const f=file.files[0]; if(!f) return;
-      const text=await f.text();
+    const loadText=text=>{
       const rows=/BEGIN:VCARD/i.test(text)?fromVCF(text):fromCSV(text);
       if(!rows.length) toast("Couldn't find any contacts in that file"); else load(rows);
+    };
+    file.addEventListener("change",async()=>{
+      const f=file.files[0]; if(!f) return;
+      loadText(await f.text());
     });
     if(S.importRows.length) drawPrev();
+    // A .vcf shared from another app (Android share sheet) is left in the cache by sw.js.
+    // Wait for the data to load so duplicates are flagged against the real list.
+    if(S.status==="ready") takeSharedFile().then(t=>{if(t) loadText(t);});
   }
 };
 
