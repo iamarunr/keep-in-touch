@@ -8,7 +8,7 @@ A personal keep-in-touch app, based on Derek Sivers' "Stay in touch with hundred
 
 - **Live:** https://keep-in-touch-d58.pages.dev/ (Cloudflare Pages, auto-deploys on push to `main`)
 - **Repo:** https://github.com/iamarunr/keep-in-touch
-- **Version shown in Settings:** 5 (`APP_VERSION` in index.html, `VERSION` in sw.js is `kit-v5`)
+- **Version shown in Settings:** 6 (`APP_VERSION` in index.html, `VERSION` in sw.js is `kit-v6`)
 
 ## How we got here
 
@@ -65,7 +65,7 @@ Settings are stored at `data/users/local/crm` as `{settings: {cad: {A,B,C,D days
   - private tabs
   - Cloudflare's per-deploy preview addresses (`<hash>.keep-in-touch-d58.pages.dev`)
 
-  Use only the installed app on the main address.
+  Use only the installed app on the main address. Preview addresses show a banner saying so.
 - **iOS Safari can evict site storage** after about 7 days without a visit. Home Screen apps are exempt, which is another reason to install.
 - **Releases:** bump both `APP_VERSION` (index.html) and `VERSION` (sw.js) on each release. That's how installed copies notice an update and how you confirm which build is running (Settings shows "Version N").
 
@@ -87,6 +87,7 @@ Tests cover:
 - install button text per browser and hidden in standalone mode
 - iPhone-size vCard import with the button visible
 - one-launch updates
+- preview-address banner (shown on `<hash>.keep-in-touch-d58.pages.dev`, not on the main address or localhost)
 
 Screenshots go to `tests/output/` (gitignored).
 
@@ -99,7 +100,7 @@ Screenshots go to `tests/output/` (gitignored).
 
 - [ ] Confirm on iPhone: Settings shows **Version 5**, and a vCard import now saves.
 - [ ] Try the real Contact Picker on the Pixel (Import → Choose contacts).
-- [ ] Warn when the app is opened on a Cloudflare preview address (`<hash>.keep-in-touch-d58.pages.dev`), since data there is separate.
+- [x] Warn when the app is opened on a Cloudflare preview address (`<hash>.keep-in-touch-d58.pages.dev`), since data there is separate. (Version 6: a banner links to the main address; `isPreviewHost()` in index.html, tests set `window.KIT_TEST_HOST`.)
 - [ ] Optional **sync**: Cloudflare Worker (static assets) + D1 with a private passphrase. `store.js` is the single seam to swap or extend.
 - [ ] Optional: Web Share Target so a `.vcf` shared from another app opens straight into Import (Android).
 - [ ] Optional: per-person "check-in message" templates or reminders (notifications would need a server or periodic background sync).

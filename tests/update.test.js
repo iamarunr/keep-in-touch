@@ -10,7 +10,7 @@ const { chromium } = require('playwright'); const fs=require('fs');
   // ship a "new version": bump SW cache name + app version on disk
   const sw=path.join(ROOT,'sw.js'), ix=path.join(ROOT,'index.html');
   const swO=fs.readFileSync(sw,'utf8'), ixO=fs.readFileSync(ix,'utf8');
-  fs.writeFileSync(sw,swO.replace('kit-v5','kit-v6-test')); fs.writeFileSync(ix,ixO.replace('APP_VERSION="5"','APP_VERSION="6-test"'));
+  fs.writeFileSync(sw,swO.replace(/kit-v\d+/,'kit-vnext-test')); fs.writeFileSync(ix,ixO.replace(/APP_VERSION="\d+"/,'APP_VERSION="next-test"'));
   let navs=0; p.on('framenavigated',f=>{if(f===p.mainFrame()) navs++;});
   await p.reload(); await p.waitForTimeout(2500);  // one open: should auto-reload into the new version
   console.log('after one open:', await p.textContent('#storageinfo'), '| page loads:', navs);

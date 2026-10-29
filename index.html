@@ -40,6 +40,7 @@ nav.tabs a.on{background:var(--ink);color:var(--bg)}
 nav.tabs a .n{display:inline-block;min-width:18px;padding:0 5px;margin-left:5px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:12px;text-align:center}
 h2{font-family:Fraunces,Georgia,serif;font-weight:500;font-size:22px;margin:0 0 12px}
 .banner{background:var(--soft);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;color:var(--muted)}
+.banner a{color:var(--accent)}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
 .stat b{display:block;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:500;line-height:1.1}
@@ -139,7 +140,7 @@ aside.drawer.on{transform:none}
 <script>
 "use strict";
 /* ---------- constants ---------- */
-const APP_VERSION="5";
+const APP_VERSION="6";
 const TIERS = ["A","B","C","D"];
 const TIER_LABEL = {A:"Very important",B:"Important",C:"Most people",D:"Demoted"};
 const DEF = {cad:{A:21,B:60,C:182,D:365}, goal:3};
@@ -258,8 +259,18 @@ function renderTabs(){
     nav.append(h("a",{href:"#"+k,class:S.view===k?"on":null},label, k==="today"&&dueN?h("span",{class:"n"},dueN):null));
   }
 }
+// Cloudflare gives every deploy its own <hash>.keep-in-touch-d58.pages.dev address, with its own separate storage.
+// Tests run on 127.0.0.1, so they can set window.KIT_TEST_HOST to try other hostnames.
+const MAIN_HOST="keep-in-touch-d58.pages.dev";
+function isPreviewHost(host){
+  host=(host||"").toLowerCase();
+  return host.endsWith("."+MAIN_HOST);
+}
 function renderBanner(){
   const b=$("#banner"); b.replaceChildren();
+  if(isPreviewHost(window.KIT_TEST_HOST||location.hostname)) b.append(h("div",{class:"banner",id:"previewBanner"},
+    "This is a preview address. Anything you save here is kept separate from the main app. Use ",
+    h("a",{href:"https://"+MAIN_HOST+"/"},MAIN_HOST)," instead."));
   if(S.status==="nodb") b.append(h("div",{class:"banner"},"This browser won't let the app store data (private browsing can block it). Open it in a normal Chrome or Safari window."));
 }
 function go(){
