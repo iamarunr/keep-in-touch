@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Keep in Touch</title>
+<meta name="description" content="A tiny personal CRM for keeping in touch with people: A list every 3 weeks, B every 2 months, C every 6 months, D once a year.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#f5f1ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#171512" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Keep in Touch">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f1ea;--card:#fffdf8;--ink:#1f1c18;--muted:#6f685e;--line:#e4ddd1;--soft:#efe9df;
+  --accent:#b4471c;--accent-ink:#fff;
+  --A:#b4471c;--B:#c48a12;--C:#2f7d74;--D:#8a8378;
+  --ok:#2f7d4f;--warn:#b4471c;
+  --radius:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#171512;--card:#211e1a;--ink:#f1ece4;--muted:#a69f93;--line:#35312b;--soft:#2a2621;
+  --accent:#e0703f;--A:#e0703f;--B:#e0ad3c;--C:#5bb3a8;--D:#9d968a;--ok:#5fbf86}
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:880px;margin:0 auto;padding:env(safe-area-inset-top) max(18px,env(safe-area-inset-right)) 80px max(18px,env(safe-area-inset-left))}
+header.top{padding:28px 0 6px}
+h1{font-family:Fraunces,Georgia,serif;font-weight:650;font-size:34px;letter-spacing:-.01em;margin:0}
+.sub{color:var(--muted);margin:2px 0 0}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;gap:4px;overflow-x:auto;padding:14px 0 10px;border-bottom:1px solid var(--line);margin-bottom:20px;scrollbar-width:none}
+nav.tabs a{padding:7px 13px;border-radius:999px;text-decoration:none;color:var(--muted);font-weight:500;white-space:nowrap}
+nav.tabs a.on{background:var(--ink);color:var(--bg)}
+nav.tabs a .n{display:inline-block;min-width:18px;padding:0 5px;margin-left:5px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:12px;text-align:center}
+h2{font-family:Fraunces,Georgia,serif;font-weight:500;font-size:22px;margin:0 0 12px}
+.banner{background:var(--soft);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
+.stat b{display:block;font-family:Fraunces,Georgia,serif;font-size:26px;font-weight:500;line-height:1.1}
+.stat span{color:var(--muted);font-size:13px}
+.meter{height:5px;background:var(--soft);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ok)}
+@media (max-width:620px){.stats{grid-template-columns:repeat(2,1fr)}}
+.list{display:flex;flex-direction:column;gap:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+.name{font-weight:600;font-size:16px;cursor:pointer}
+.name:hover{text-decoration:underline}
+.tier{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:7px;font-weight:600;font-size:13px;color:#fff;flex:none}
+.tier.A{background:var(--A)}.tier.B{background:var(--B)}.tier.C{background:var(--C)}.tier.D{background:var(--D)}
+.meta{color:var(--muted);font-size:13px}
+.due{font-size:13px;font-weight:500}
+.due.late{color:var(--warn)}
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.chip{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--muted)}
+.last{margin-top:8px;font-size:13.5px;color:var(--muted)}
+.last q{color:var(--ink);quotes:none}
+.btn{border:1px solid var(--line);background:var(--card);padding:7px 13px;border-radius:10px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.danger{color:var(--warn)}
+.btn.small{padding:4px 9px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:default}
+.actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.contact-line{display:flex;gap:8px;align-items:center;font-size:13.5px;margin-top:4px;flex-wrap:wrap}
+.contact-line .v{color:var(--ink)}
+.logbox{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+.seg{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.seg button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:4px 11px;cursor:pointer;font-size:13px}
+.seg button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+label.f{display:block;margin-bottom:12px}
+label.f>span{display:block;font-size:13px;color:var(--muted);margin-bottom:4px;font-weight:500}
+input[type=text],input[type=email],input[type=tel],input[type=date],input[type=number],input[type=search],select,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+textarea{min-height:80px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+@media (max-width:560px){.grid2{grid-template-columns:1fr}}
+.check{display:flex;gap:8px;align-items:flex-start;margin:4px 0 14px}
+.check input{margin-top:4px}
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+@media (max-width:620px){.filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}}
+.prow{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--card);border:1px solid var(--line);border-radius:12px;cursor:pointer}
+.prow:hover{border-color:var(--muted)}
+.prow .when{font-size:13px;color:var(--muted);white-space:nowrap}
+.daygrp{margin-bottom:16px}
+.daygrp h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 6px;font-weight:600}
+.empty{text-align:center;padding:40px 16px;color:var(--muted)}
+.empty b{display:block;font-family:Fraunces,Georgia,serif;font-size:22px;color:var(--ink);font-weight:500;margin-bottom:6px}
+.tierhelp{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.tierhelp div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px}
+@media (max-width:620px){.tierhelp{grid-template-columns:1fr 1fr}}
+table.prev{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+table.prev th,table.prev td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.prev th{font-size:12px;color:var(--muted);font-weight:600;background:var(--soft)}
+table.prev select{padding:3px 6px;width:auto}
+.tblwrap{overflow-x:auto;margin:12px 0}
+.dup{font-size:11px;color:var(--warn);font-weight:600;margin-left:6px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:20;display:none}
+.overlay.on{display:block}
+aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(480px,100%);background:var(--bg);z-index:21;transform:translateX(100%);transition:transform .2s ease;overflow-y:auto;padding:20px 20px 60px;border-left:1px solid var(--line)}
+aside.drawer.on{transform:none}
+.dhead{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.dhead h2{margin:0;flex:1}
+.hist{list-style:none;padding:0;margin:0}
+.hist li{padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.hist li .d{color:var(--muted);margin-right:6px}
+.section{margin-top:22px}
+.section h4{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 8px}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:40;max-width:90vw}
+#toast.on{opacity:1}
+.hint{font-size:13px;color:var(--muted);margin:-4px 0 12px}
+.quote{font-family:Fraunces,Georgia,serif;font-style:italic;color:var(--muted);margin:26px 0 0;font-size:15px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="row"><h1 class="grow">Keep in Touch</h1><button class="btn" id="installBtn" hidden>Install app</button></div>
+    <p class="sub">A list every 3 weeks · B every 2 months · C every 6 months · D once a year</p>
+  </header>
+  <nav class="tabs" id="tabs"></nav>
+  <div id="banner"></div>
+  <main id="main"></main>
+</div>
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer" aria-hidden="true"></aside>
+<div id="toast" role="status"></div>
+
+<script src="store.js"></script>
+<script>
+"use strict";
+/* ---------- constants ---------- */
+const TIERS = ["A","B","C","D"];
+const TIER_LABEL = {A:"Very important",B:"Important",C:"Most people",D:"Demoted"};
+const DEF = {cad:{A:21,B:60,C:182,D:365}, goal:3};
+const CHANNELS = ["Message","Call","Email","In person","Other"];
+const VIEWS = [["today","Today"],["upcoming","Upcoming"],["people","People"],["add","Add"],["import","Import"],["prefs","Settings"]];
+
+/* ---------- state ---------- */
+const S = {
+  view:"today", contacts:[], settings:JSON.parse(JSON.stringify(DEF)),
+  status:"loading", // loading | ready | nodb
+  logDraft:null,     // {id, channel, note}
+  filters:{q:"",tier:"",tag:"",city:""},
+  drawerId:null, drawerDirty:false,
+  importRows:[], meta:{}, addPrefill:null
+};
+let db=null, uid=null, rootRef=null, contactsCol=null, metaRef=null, installEvt=null;
+const hasPicker=("contacts" in navigator)&&("ContactsManager" in window);
+
+/* ---------- helpers ---------- */
+function h(tag, props, ...kids){
+  const e=document.createElement(tag);
+  for(const [k,v] of Object.entries(props||{})){
+    if(v==null||v===false) continue;
+    if(k==="class") e.className=v;
+    else if(k.startsWith("on")&&typeof v==="function") e.addEventListener(k.slice(2),v);
+    else if(k==="value") e.value=v;
+    else if(k==="checked") e.checked=!!v;
+    else e.setAttribute(k, v===true?"":v);
+  }
+  for(const c of kids.flat(Infinity)){
+    if(c==null||c===false) continue;
+    e.append(c instanceof Node?c:document.createTextNode(String(c)));
+  }
+  return e;
+}
+const $=s=>document.querySelector(s);
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const today=()=>iso(new Date());
+function parseD(s){const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d);}
+function addDays(s,n){const d=parseD(s);d.setDate(d.getDate()+n);return iso(d);}
+function diffDays(a,b){const u=s=>{const [y,m,d]=s.split("-").map(Number);return Date.UTC(y,m-1,d);};return Math.round((u(b)-u(a))/864e5);}
+function rel(n){ // n = days from today (negative = past)
+  if(n===0) return "today";
+  if(n===1) return "tomorrow";
+  if(n===-1) return "yesterday";
+  const a=Math.abs(n); let t;
+  if(a<14) t=a+" days"; else if(a<60) t=Math.round(a/7)+" weeks"; else if(a<365) t=Math.round(a/30.4)+" months"; else t=(Math.round(a/36.5)/10)+" years";
+  return n<0? t+" ago" : "in "+t;
+}
+function fmtDate(s){return parseD(s).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});}
+const cad=t=>Number(S.settings.cad&&S.settings.cad[t])||DEF.cad[t];
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let toastT;
+function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),2600);}
+function errMsg(e){
+  const c=e&&e.code;
+  if(c==="quota_exceeded") return "Storage is full. Delete some contacts and try again.";
+  if(c==="invalid_argument") return "Couldn't save. You may not have edit access to this page.";
+  if(c==="revoked"||c==="not_granted") return "Saving isn't available right now.";
+  return "Couldn't save. Please try again.";
+}
+async function withRetry(fn){
+  for(let i=0;;i++){
+    try{return await fn();}
+    catch(e){
+      const c=e&&e.code;
+      if((c==="unavailable"||c==="resource_exhausted")&&i<4){await sleep(700*(i+1)+Math.random()*400);continue;}
+      throw e;
+    }
+  }
+}
+const queues=new Map();
+function write(id, fn){
+  const prev=queues.get(id)||Promise.resolve();
+  const p=prev.catch(()=>{}).then(()=>withRetry(fn));
+  queues.set(id,p);
+  p.catch(e=>{console.error(e);toast(errMsg(e));});
+  return p;
+}
+async function copy(text){
+  try{await navigator.clipboard.writeText(text);toast("Copied");}
+  catch(e){toast("Couldn't copy. Select the text instead.");}
+}
+const splitTags=s=>String(s||"").split(/[,;]/).map(x=>x.trim()).filter(Boolean);
+const byId=id=>S.contacts.find(c=>c.id===id);
+const canWrite=()=>S.status==="ready";
+
+/* ---------- data ops ---------- */
+function newContact(f){
+  return {
+    name:String(f.name||"").trim(), email:f.email||"", phone:f.phone||"", city:f.city||"",
+    tags:Array.isArray(f.tags)?f.tags:splitTags(f.tags), notes:f.notes||"",
+    tier:TIERS.includes(f.tier)?f.tier:"C",
+    lastContact:f.lastContact||null, nextContact:f.nextContact||today(),
+    metOn:f.metOn||null, log:f.log||[], createdAt:today()
+  };
+}
+function logContact(c, channel, note){
+  const t=today();
+  const log=[{date:t,channel,note:note||""},...(c.log||[])].slice(0,150);
+  return write(c.id,()=>contactsCol.doc(c.id).update({lastContact:t,nextContact:addDays(t,cad(c.tier)),log}))
+    .then(()=>toast(c.name+": next check-in "+rel(cad(c.tier))));
+}
+function snooze(c,days){
+  return write(c.id,()=>contactsCol.doc(c.id).update({nextContact:addDays(today(),days)}))
+    .then(()=>toast(c.name+" snoozed "+days+" days"));
+}
+
+/* ---------- routing / shell ---------- */
+function renderTabs(){
+  const t=today();
+  const dueN=S.contacts.filter(c=>c.nextContact&&c.nextContact<=t).length;
+  const nav=$("#tabs"); nav.replaceChildren();
+  for(const [k,label] of VIEWS){
+    nav.append(h("a",{href:"#"+k,class:S.view===k?"on":null},label, k==="today"&&dueN?h("span",{class:"n"},dueN):null));
+  }
+}
+function renderBanner(){
+  const b=$("#banner"); b.replaceChildren();
+  if(S.status==="nodb") b.append(h("div",{class:"banner"},"This browser won't let the app store data (private browsing can block it). Open it in a normal Chrome or Safari window."));
+}
+function go(){
+  const k=(location.hash||"").slice(1);
+  S.view=VIEWS.some(v=>v[0]===k)?k:"today";
+  buildView();
+}
+window.addEventListener("hashchange",go);
+
+const V={}; // view modules: build() makes shell, update() refreshes dynamic part
+function buildView(){
+  renderTabs(); renderBanner();
+  const m=$("#main"); m.replaceChildren();
+  V[S.view].build(m);
+  V[S.view].update&&V[S.view].update();
+}
+function refresh(){ // after data change
+  renderTabs();
+  V[S.view].update&&V[S.view].update();
+  if(S.drawerId){ if(!byId(S.drawerId)) closeDrawer(); else if(!S.drawerDirty) renderDrawer(); }
+}
+
+/* ---------- TODAY ---------- */
+V.today={
+  build(m){
+    m.append(h("div",{id:"backupnag"}),h("div",{class:"stats",id:"stats"}), h("h2",{},"Due to contact"), h("div",{class:"list",id:"duelist"}),
+      h("p",{class:"quote"},"Just find out how they’re doing, and see if you can help in any way."));
+  },
+  update(){
+    const t=today(), wk=addDays(t,-6);
+    const st=$("#stats"), list=$("#duelist"); if(!st) return;
+    if(S.status==="loading"){list.replaceChildren(h("div",{class:"empty"},"Loading…"));return;}
+    const due=S.contacts.filter(c=>c.nextContact&&c.nextContact<=t)
+      .sort((a,b)=>TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||a.nextContact.localeCompare(b.nextContact));
+    let touched=0; for(const c of S.contacts) for(const l of (c.log||[])) if(l.date>=wk) touched++;
+    const met=S.contacts.filter(c=>c.metOn&&c.metOn>=wk).length;
+    const goal=Number(S.settings.goal)||DEF.goal;
+    const nag=$("#backupnag"), lb=S.meta&&S.meta.lastBackup;
+    if(nag){nag.replaceChildren();
+      if(S.contacts.length>=5&&(!lb||diffDays(lb,t)>30)) nag.append(h("div",{class:"banner row"},
+        h("span",{class:"grow"},lb?"Your last backup was "+rel(diffDays(t,lb))+".":"Your contacts are stored only on this device and haven’t been backed up yet."),
+        h("button",{class:"btn primary small",onclick:()=>canShareFiles()?shareBackup():downloadBackup()},"Back up now")));}
+    st.replaceChildren(
+      h("div",{class:"stat"},h("b",{},due.length),h("span",{},"due now")),
+      h("div",{class:"stat"},h("b",{},touched),h("span",{},"check-ins, last 7 days")),
+      h("div",{class:"stat"},h("b",{},met+" / "+goal),h("span",{},"new people this week"),h("div",{class:"meter"},h("i",{style:"width:"+Math.min(100,met/goal*100)+"%"}))),
+      h("div",{class:"stat"},h("b",{},S.contacts.length),h("span",{},"people"))
+    );
+    list.replaceChildren();
+    if(!S.contacts.length){
+      list.append(h("div",{class:"empty"},h("b",{},"No one here yet"),"Start with the people who matter most. ",h("a",{href:"#add"},"Add someone")," or ",h("a",{href:"#import"},"import your contacts"),"."));
+      return;
+    }
+    if(!due.length){
+      const nxt=S.contacts.filter(c=>c.nextContact).sort((a,b)=>a.nextContact.localeCompare(b.nextContact))[0];
+      list.append(h("div",{class:"empty"},h("b",{},"All caught up"),nxt?("Next up: "+nxt.name+", "+rel(diffDays(t,nxt.nextContact))+"."):""));
+      return;
+    }
+    for(const c of due) list.append(dueCard(c,t));
+  }
+};
+function dueCard(c,t){
+  const od=diffDays(c.nextContact,t);
+  const last=(c.log||[])[0];
+  const card=h("div",{class:"card"},
+    h("div",{class:"row"},
+      h("span",{class:"tier "+c.tier,title:TIER_LABEL[c.tier]},c.tier),
+      h("div",{class:"grow"},
+        h("span",{class:"name",onclick:()=>openDrawer(c.id)},c.name),
+        c.city?h("span",{class:"meta"}," · "+c.city):null),
+      h("span",{class:"due"+(od>0?" late":"")},od>0?(od+(od===1?" day":" days")+" overdue"):"due today")
+    ),
+    contactLine(c),
+    h("div",{class:"last"}, last?["Last: ",rel(diffDays(t,last.date))," · ",last.channel, last.note?[" — ",h("q",{},last.note)]:null]
+      : c.lastContact? "Last talked "+rel(diffDays(t,c.lastContact)) : "No check-ins logged yet"),
+    c.notes?h("div",{class:"last"},c.notes.length>140?c.notes.slice(0,140)+"…":c.notes):null,
+    (c.tags||[]).length?h("div",{class:"chips"},c.tags.map(x=>h("span",{class:"chip"},x))):null
+  );
+  if(S.logDraft&&S.logDraft.id===c.id) card.append(logForm(c,()=>{S.logDraft=null;V.today.update();}));
+  else card.append(h("div",{class:"actions"},
+    h("button",{class:"btn primary",disabled:!canWrite(),onclick:()=>{S.logDraft={id:c.id,channel:"Message",note:""};V.today.update();}},"Checked in ✓"),
+    h("button",{class:"btn",disabled:!canWrite(),onclick:()=>snooze(c,7)},"Snooze a week"),
+    h("button",{class:"btn ghost",onclick:()=>openDrawer(c.id)},"Open")
+  ));
+  return card;
+}
+function contactLine(c){
+  const parts=[];
+  if(c.email) parts.push(h("span",{class:"v"},c.email),h("button",{class:"btn ghost small",onclick:()=>copy(c.email)},"copy"));
+  if(c.phone) parts.push(h("span",{class:"v"},c.phone),h("button",{class:"btn ghost small",onclick:()=>copy(c.phone)},"copy"));
+  return parts.length?h("div",{class:"contact-line meta"},parts):null;
+}
+function logForm(c,onDone,draftObj){
+  const d=draftObj||S.logDraft;
+  const seg=h("div",{class:"seg"});
+  const paint=()=>{seg.replaceChildren(...CHANNELS.map(ch=>h("button",{type:"button",class:d.channel===ch?"on":null,onclick:()=>{d.channel=ch;paint();}},ch)));};
+  paint();
+  const note=h("input",{type:"text",placeholder:"How are they doing? Anything to follow up on?",value:d.note,oninput:e=>{d.note=e.target.value;}});
+  const save=async()=>{const cur=byId(c.id)||c;const ch=d.channel,nt=d.note.trim();onDone&&onDone();await logContact(cur,ch,nt).catch(()=>{});};
+  note.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();save();}});
+  setTimeout(()=>note.focus(),0);
+  return h("div",{class:"logbox"},seg,note,h("div",{class:"actions"},
+    h("button",{class:"btn primary",onclick:save},"Save check-in"),
+    h("button",{class:"btn ghost",onclick:()=>onDone&&onDone()},"Cancel")));
+}
+
+/* ---------- UPCOMING ---------- */
+V.upcoming={
+  build(m){m.append(h("h2",{},"Next 30 days"),h("div",{id:"up"}));},
+  update(){
+    const box=$("#up"); if(!box) return; box.replaceChildren();
+    const t=today(), end=addDays(t,30);
+    const items=S.contacts.filter(c=>c.nextContact&&c.nextContact>t&&c.nextContact<=end).sort((a,b)=>a.nextContact.localeCompare(b.nextContact)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier));
+    if(!items.length){box.append(h("div",{class:"empty"},h("b",{},"Nothing in the next 30 days"),"Your calendar of check-ins is clear."));return;}
+    let cur=null,grp=null;
+    for(const c of items){
+      if(c.nextContact!==cur){cur=c.nextContact;grp=h("div",{class:"list"});box.append(h("div",{class:"daygrp"},h("h3",{},fmtDate(cur)+" · "+rel(diffDays(t,cur))),grp));}
+      grp.append(personRow(c,t));
+    }
+  }
+};
+function personRow(c,t){
+  const n=c.nextContact?diffDays(t,c.nextContact):null;
+  return h("div",{class:"prow",onclick:()=>openDrawer(c.id)},
+    h("span",{class:"tier "+c.tier},c.tier),
+    h("div",{class:"grow"},h("div",{style:"font-weight:600"},c.name),
+      h("div",{class:"meta"},[c.city,(c.tags||[]).join(", ")].filter(Boolean).join(" · ")||" ")),
+    h("span",{class:"when"},n==null?"":(n<=0?(n===0?"due today":"overdue "+(-n)+"d"):rel(n))));
+}
+
+/* ---------- PEOPLE ---------- */
+V.people={
+  build(m){
+    const f=S.filters;
+    const mk=(key,label)=>h("select",{id:"f-"+key,onchange:e=>{f[key]=e.target.value;V.people.update();}},h("option",{value:""},label));
+    m.append(h("h2",{},"People"),
+      h("div",{class:"filters"},
+        h("input",{type:"search",placeholder:"Search name, notes, email…",value:f.q,oninput:e=>{f.q=e.target.value;V.people.update();}}),
+        mk("tier","All tiers"),mk("tag","All tags"),mk("city","All places")),
+      h("div",{class:"meta",id:"pcount",style:"margin-bottom:8px"}),
+      h("div",{class:"list",id:"plist"}));
+  },
+  update(){
+    const list=$("#plist"); if(!list) return;
+    const f=S.filters, t=today();
+    const setOpts=(key,vals,label)=>{const s=$("#f-"+key);if(!s) return;s.replaceChildren(h("option",{value:""},label),...vals.map(v=>h("option",{value:v},v)));s.value=vals.includes(f[key])?f[key]:"";f[key]=s.value;};
+    setOpts("tier",TIERS.map(x=>x),"All tiers");
+    [...$("#f-tier").options].forEach(o=>{if(o.value) o.textContent=o.value+" · "+TIER_LABEL[o.value];});
+    const tags=[...new Set(S.contacts.flatMap(c=>c.tags||[]))].sort((a,b)=>a.localeCompare(b));
+    const cities=[...new Set(S.contacts.map(c=>c.city).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+    setOpts("tag",tags,"All tags"); setOpts("city",cities,"All places");
+    const q=f.q.trim().toLowerCase();
+    const rows=S.contacts.filter(c=>(!f.tier||c.tier===f.tier)&&(!f.tag||(c.tags||[]).includes(f.tag))&&(!f.city||c.city===f.city)&&
+      (!q||[c.name,c.email,c.phone,c.city,c.notes,(c.tags||[]).join(" ")].join(" ").toLowerCase().includes(q)))
+      .sort((a,b)=>a.name.localeCompare(b.name));
+    $("#pcount").textContent=S.status==="loading"?"Loading…":rows.length+" of "+S.contacts.length+" people";
+    list.replaceChildren(...rows.slice(0,500).map(c=>personRow(c,t)));
+    if(rows.length>500) list.append(h("div",{class:"meta"},"Showing first 500. Narrow the search to see more."));
+    if(!S.contacts.length&&S.status!=="loading") list.append(h("div",{class:"empty"},h("b",{},"No people yet"),h("a",{href:"#add"},"Add someone")," or ",h("a",{href:"#import"},"import contacts"),"."));
+  }
+};
+
+/* ---------- PHONE CONTACTS ---------- */
+async function pickPhoneContacts(multiple){
+  try{
+    const supported=await navigator.contacts.getProperties();
+    const props=["name","email","tel","address"].filter(p=>supported.includes(p));
+    const res=await navigator.contacts.select(props,{multiple});
+    return (res||[]).map(c=>{
+      const first=a=>(Array.isArray(a)&&a.length?a[0]:"");
+      const addr=first(c.address)||{};
+      const name=String(first(c.name)||first(c.email)||first(c.tel)||"").trim();
+      return {name,email:String(first(c.email)||"").trim(),phone:String(first(c.tel)||"").trim(),city:String(addr.city||"").trim(),tags:[],notes:"",tier:""};
+    }).filter(r=>r.name);
+  }catch(e){
+    if(e&&e.name!=="AbortError"&&e.name!=="InvalidStateError") toast("Couldn't open your contacts");
+    return [];
+  }
+}
+const pickerHint="On iPhone: open Contacts, long-press a list (or select people), choose Export, save the .vcf to Files, then upload it below.";
+
+/* ---------- ADD ---------- */
+function tierHelp(){
+  return h("div",{class:"tierhelp"},TIERS.map(x=>h("div",{},h("span",{class:"tier "+x,style:"width:20px;height:20px;font-size:12px;margin-right:6px;vertical-align:-4px"},x),TIER_LABEL[x],h("div",{class:"meta"},"every "+cadText(cad(x))))));
+}
+function cadText(n){if(n%7===0&&n<70) return (n/7)+" weeks"; if(n>=360&&n<=366) return "year"; if(n>=58) return Math.round(n/30.4)+" months"; return n+" days";}
+function tierSelect(val,onchange){
+  return h("select",{onchange},TIERS.map(x=>h("option",{value:x,selected:x===val?true:null},x+" · "+TIER_LABEL[x])));
+}
+V.add={
+  build(m){
+    const f={name:"",tier:"B",email:"",phone:"",city:"",tags:"",notes:"",met:true,last:today(),...(S.addPrefill||{})};
+    S.addPrefill=null;
+    const inp=(k,type,ph)=>h("input",{type,placeholder:ph||"",value:f[k],oninput:e=>{f[k]=e.target.value;}});
+    const lastI=h("input",{type:"date",value:f.last,oninput:e=>{f.last=e.target.value;}});
+    const form=h("form",{onsubmit:async e=>{
+      e.preventDefault();
+      if(!f.name.trim()){toast("Name is required");return;}
+      if(!canWrite()){toast("Saving isn't available in this view.");return;}
+      const last=f.last||null;
+      let next=last?addDays(last,cad(f.tier)):today(); if(next<today()) next=today();
+      const data=newContact({name:f.name,tier:f.tier,email:f.email.trim(),phone:f.phone.trim(),city:f.city.trim(),tags:splitTags(f.tags),notes:f.notes.trim(),
+        lastContact:last,nextContact:next,metOn:f.met?today():null,log:last?[{date:last,channel:f.met?"In person":"Other",note:f.met?"First met":""}]:[]});
+      const ref=contactsCol.doc();
+      try{await withRetry(()=>ref.set(data));toast(data.name+" added · next check-in "+rel(diffDays(today(),next)));buildView();}
+      catch(err){toast(errMsg(err));}
+    }},
+      h("div",{class:"row",style:"margin-bottom:12px"},h("h2",{class:"grow",style:"margin:0"},"Add someone"),
+        hasPicker?h("button",{type:"button",class:"btn",onclick:async()=>{
+          const r=(await pickPhoneContacts(false))[0]; if(!r) return;
+          S.addPrefill={name:r.name,email:r.email,phone:r.phone,city:r.city,met:false,last:""};buildView();
+        }},"Fill from phone contacts"):null),
+      tierHelp(),
+      h("div",{class:"grid2"},
+        h("label",{class:"f"},h("span",{},"Name *"),inp("name","text","Full name")),
+        h("label",{class:"f"},h("span",{},"Tier"),tierSelect(f.tier,e=>{f.tier=e.target.value;})),
+        h("label",{class:"f"},h("span",{},"Email"),inp("email","email")),
+        h("label",{class:"f"},h("span",{},"Phone"),inp("phone","tel")),
+        h("label",{class:"f"},h("span",{},"City / place"),inp("city","text","e.g. Chicago")),
+        h("label",{class:"f"},h("span",{},"Tags"),inp("tags","text","comma separated: runner, client, designer"))),
+      h("label",{class:"f"},h("span",{},"Notes"),h("textarea",{placeholder:"Something to remember them by: how you met, what they care about…",oninput:e=>{f.notes=e.target.value;}})),
+      h("div",{class:"grid2"},
+        h("label",{class:"f"},h("span",{},"Last talked"),lastI),
+        h("div",{})),
+      h("p",{class:"hint"},"Leave “Last talked” empty to put them on today’s list."),
+      h("label",{class:"check"},h("input",{type:"checkbox",checked:f.met,onchange:e=>{f.met=e.target.checked;}}),h("span",{},"New person: count toward this week’s goal of meeting new people")),
+      h("button",{class:"btn primary",type:"submit"},"Add person")
+    );
+    m.append(form);
+  }
+};
+
+/* ---------- IMPORT ---------- */
+function parseCSV(text){
+  const rows=[];let row=[],cell="",q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(q){ if(ch==='"'){ if(text[i+1]==='"'){cell+='"';i++;} else q=false; } else cell+=ch; }
+    else if(ch==='"') q=true;
+    else if(ch===','){row.push(cell);cell="";}
+    else if(ch==='\n'||ch==='\r'){ if(ch==='\r'&&text[i+1]==='\n') i++; row.push(cell);rows.push(row);row=[];cell=""; }
+    else cell+=ch;
+  }
+  if(cell!==""||row.length){row.push(cell);rows.push(row);}
+  return rows.filter(r=>r.some(c=>c.trim()!==""));
+}
+function cleanTags(s){
+  return String(s||"").split(/:::|[,;]/).map(x=>x.replace(/^\*\s*/,"").trim()).filter(x=>x&&!/^(mycontacts|starred)$/i.test(x));
+}
+function fromCSV(text){
+  const rows=parseCSV(text.replace(/^﻿/,""));
+  if(rows.length<2) return [];
+  const H=rows[0].map(x=>x.trim().toLowerCase());
+  const find=(re,not)=>H.findIndex(x=>re.test(x)&&!(not&&not.test(x)));
+  const iName=find(/^(name|full name|display name|contact name)$/);
+  const iFirst=find(/^(first name|given name)$/), iMid=find(/^(middle name|additional name)$/), iLast=find(/^(last name|family name|surname)$/);
+  const iEmail=find(/e-?mail/,/type|label/), iPhone=find(/phone|mobile|cell/,/type|label/);
+  const iCity=find(/city|location|locality/), iTags=find(/^(tags|labels|group membership|categories|groups)$/);
+  const iTier=find(/^(tier|list|group tier)$/), iNotes=find(/^notes?$/), iOrg=find(/^(organization name|organization 1 - name|company|organization)$/);
+  const out=[];
+  for(const r of rows.slice(1)){
+    const g=i=>i>=0?(r[i]||"").trim():"";
+    let name=g(iName);
+    if(!name) name=[g(iFirst),g(iMid),g(iLast)].filter(Boolean).join(" ");
+    if(!name) name=g(iOrg)||g(iEmail);
+    if(!name) continue;
+    const tier=g(iTier).toUpperCase();
+    const tags=cleanTags(g(iTags)); if(g(iOrg)&&name!==g(iOrg)) tags.push(g(iOrg));
+    out.push({name,email:g(iEmail).split(/\s*:::\s*/)[0],phone:g(iPhone).split(/\s*:::\s*/)[0],city:g(iCity),tags,notes:g(iNotes),tier:TIERS.includes(tier)?tier:""});
+  }
+  return out;
+}
+function fromVCF(text){
+  const lines=text.replace(/\r\n/g,"\n").replace(/\n[ \t]/g,"").split("\n");
+  const out=[];let cur=null;
+  const un=s=>s.replace(/\\n/gi,"\n").replace(/\\([,;\\])/g,"$1");
+  for(const line of lines){
+    const i=line.indexOf(":"); if(i<0) continue;
+    const key=line.slice(0,i), val=line.slice(i+1);
+    const prop=key.split(";")[0].split(".").pop().toUpperCase();
+    if(prop==="BEGIN"&&/vcard/i.test(val)){cur={name:"",n:"",email:"",phone:"",city:"",tags:[],notes:"",tier:""};continue;}
+    if(!cur) continue;
+    if(prop==="END"){const name=cur.name||cur.n||cur.email; if(name){cur.name=name;delete cur.n;out.push(cur);} cur=null;continue;}
+    if(prop==="FN") cur.name=un(val).trim();
+    else if(prop==="N"&&!cur.n){const p=val.split(";");cur.n=[p[1],p[2],p[0]].map(x=>un(x||"").trim()).filter(Boolean).join(" ");}
+    else if(prop==="EMAIL"&&!cur.email) cur.email=un(val).trim();
+    else if(prop==="TEL"&&!cur.phone) cur.phone=un(val).replace(/^tel:/i,"").trim();
+    else if(prop==="ADR"&&!cur.city) cur.city=un(val.split(";")[3]||"").trim();
+    else if(prop==="NOTE") cur.notes=un(val).trim();
+    else if(prop==="CATEGORIES") cur.tags=cleanTags(un(val));
+    else if(prop==="ORG"&&val) cur.tags.push(un(val.split(";")[0]).trim());
+  }
+  return out.map(c=>({...c,tags:c.tags.filter(Boolean)}));
+}
+function fromPaste(text){
+  const out=[];
+  for(const raw of text.split(/\n/)){
+    const parts=raw.split(/\t|,/).map(x=>x.trim()).filter(Boolean);
+    if(!parts.length) continue;
+    const r={name:"",email:"",phone:"",city:"",tags:[],notes:"",tier:""};
+    for(const p of parts){
+      if(!r.name){r.name=p;continue;}
+      if(/@/.test(p)&&!r.email) r.email=p;
+      else if(/^[ABCD]$/i.test(p)&&!r.tier) r.tier=p.toUpperCase();
+      else if(/^[+\d][\d\s().-]{6,}$/.test(p)&&!r.phone) r.phone=p;
+      else if(!r.city) r.city=p;
+      else r.tags.push(p);
+    }
+    out.push(r);
+  }
+  return out;
+}
+V.import={
+  build(m){
+    const st={def:"C",spread:true,busy:false};
+    const paste=h("textarea",{placeholder:"One person per line. Only the name is required:\nPriya Shah, priya@example.com, Austin, A\nTom Reyes\nJo Kim, +1 555 123 4567, Denver",style:"min-height:120px"});
+    const file=h("input",{type:"file",accept:".csv,.vcf,.vcard,text/csv,text/vcard"});
+    const prev=h("div",{id:"impprev"});
+    const load=rows=>{
+      const emails=new Set(S.contacts.map(c=>(c.email||"").toLowerCase()).filter(Boolean));
+      const names=new Set(S.contacts.map(c=>c.name.toLowerCase()));
+      const seen=new Set();
+      S.importRows=rows.map(r=>{
+        const k=(r.email||"").toLowerCase()||r.name.toLowerCase();
+        const dup=(r.email&&emails.has(r.email.toLowerCase()))||names.has(r.name.toLowerCase())||seen.has(k);
+        seen.add(k);
+        return {...r,dup,on:!dup};
+      });
+      drawPrev();
+    };
+    const drawPrev=()=>{
+      prev.replaceChildren();
+      const rows=S.importRows; if(!rows.length) return;
+      const nOn=rows.filter(r=>r.on).length, nDup=rows.filter(r=>r.dup).length;
+      const btn=h("button",{class:"btn primary",disabled:st.busy||!nOn||!canWrite(),onclick:doImport},st.busy?"Importing…":"Import "+nOn+" "+(nOn===1?"person":"people"));
+      const allBox=h("input",{type:"checkbox",checked:rows.every(r=>r.on),onchange:e=>{rows.forEach(r=>r.on=e.target.checked);drawPrev();}});
+      prev.append(
+        h("div",{class:"section"},h("h4",{},"Preview · "+rows.length+" found"+(nDup?" · "+nDup+" already in your list (unticked)":""))),
+        h("div",{class:"grid2"},
+          h("label",{class:"f"},h("span",{},"Tier for rows without one"),tierSelect(st.def,e=>{st.def=e.target.value;})),
+          h("div",{})),
+        h("label",{class:"check"},h("input",{type:"checkbox",checked:st.spread,onchange:e=>{st.spread=e.target.checked;}}),
+          h("span",{},"Spread first check-ins across each tier’s cycle (recommended). Otherwise everyone is due today.")),
+        h("div",{class:"tblwrap"},h("table",{class:"prev"},
+          h("thead",{},h("tr",{},h("th",{},allBox),h("th",{},"Name"),h("th",{},"Email / phone"),h("th",{},"Place"),h("th",{},"Tags"),h("th",{},"Tier"))),
+          h("tbody",{},rows.slice(0,1000).map(r=>h("tr",{},
+            h("td",{},h("input",{type:"checkbox",checked:r.on,onchange:e=>{r.on=e.target.checked;drawPrev();}})),
+            h("td",{},r.name,r.dup?h("span",{class:"dup"},"DUPLICATE"):null),
+            h("td",{class:"meta"},r.email||r.phone||""),
+            h("td",{class:"meta"},r.city||""),
+            h("td",{class:"meta"},(r.tags||[]).join(", ")),
+            h("td",{},h("select",{onchange:e=>{r.tier=e.target.value;}},h("option",{value:"",selected:!r.tier?true:null},"default"),TIERS.map(x=>h("option",{value:x,selected:r.tier===x?true:null},x))))
+          ))))),
+        rows.length>1000?h("p",{class:"hint"},"Only the first 1,000 rows will be imported."):"",
+        h("div",{class:"row"},btn,h("span",{class:"meta",id:"impprog"}))
+      );
+    };
+    async function doImport(){
+      if(!canWrite()){toast("Saving isn't available in this view.");return;}
+      const rows=S.importRows.slice(0,1000).filter(r=>r.on);
+      st.busy=true;drawPrev();
+      const t=today();let n=0,failed=0;
+      for(const r of rows){
+        const tier=r.tier||st.def;
+        const next=st.spread?addDays(t,Math.floor(Math.random()*cad(tier))):t;
+        const ref=contactsCol.doc();
+        try{await withRetry(()=>ref.set(newContact({...r,tier,nextContact:next})));n++;}
+        catch(e){failed++; if(e&&e.code==="quota_exceeded"){toast(errMsg(e));break;}}
+        const p=$("#impprog"); if(p) p.textContent=n+" / "+rows.length;
+        await sleep(90);
+      }
+      st.busy=false;S.importRows=[];paste.value="";file.value="";prev.replaceChildren();
+      toast("Imported "+n+(failed?" · "+failed+" failed":""));
+      location.hash="#people";
+    }
+    m.append(h("h2",{},"Import contacts"),
+      h("div",{class:"card",style:"margin-bottom:10px"},
+        h("h4",{style:"margin:0 0 4px"},"From your phone"),
+        hasPicker?[h("p",{class:"hint",style:"margin:0 0 10px"},"Pick people from your phone’s contacts. Only the ones you choose are shared with the app."),
+          h("button",{class:"btn primary",onclick:async()=>{const r=await pickPhoneContacts(true);if(r.length) load(r);}},"Choose contacts")]
+          :h("p",{class:"hint",style:"margin:0"},"This browser can’t open your phone’s contacts directly (Chrome on Android can). "+pickerHint)),
+      h("div",{class:"card"},
+        h("h4",{style:"margin:0 0 8px"},"Paste a list"),paste,
+        h("div",{class:"actions"},h("button",{class:"btn",onclick:()=>{const r=fromPaste(paste.value);if(!r.length) toast("Nothing to import");else load(r);}},"Preview"))),
+      h("div",{class:"card",style:"margin-top:10px"},
+        h("h4",{style:"margin:0 0 4px"},"Upload a CSV or vCard"),
+        h("p",{class:"hint",style:"margin:0 0 10px"},"Google Contacts: Export → Google CSV. iPhone/Mac Contacts: select all → Export vCard. Outlook CSV works too. Columns named tier, tags, city and notes are picked up automatically."),
+        file),
+      prev);
+    file.addEventListener("change",async()=>{
+      const f=file.files[0]; if(!f) return;
+      const text=await f.text();
+      const rows=/BEGIN:VCARD/i.test(text)?fromVCF(text):fromCSV(text);
+      if(!rows.length) toast("Couldn't find any contacts in that file"); else load(rows);
+    });
+    if(S.importRows.length) drawPrev();
+  }
+};
+
+/* ---------- SETTINGS ---------- */
+V.prefs={
+  build(m){
+    const f={cad:{...DEF.cad,...(S.settings.cad||{})},goal:S.settings.goal||DEF.goal};
+    m.append(h("h2",{},"Settings"),
+      h("div",{class:"card"},
+        h("h4",{style:"margin:0 0 10px"},"Check-in cadence (days)"),
+        h("div",{class:"grid2"},TIERS.map(x=>h("label",{class:"f"},h("span",{},x+" · "+TIER_LABEL[x]),
+          h("input",{type:"number",min:"1",max:"3650",value:f.cad[x],oninput:e=>{f.cad[x]=Math.max(1,parseInt(e.target.value,10)||DEF.cad[x]);}})))),
+        h("label",{class:"f",style:"max-width:260px"},h("span",{},"New people to meet each week"),
+          h("input",{type:"number",min:"0",max:"50",value:f.goal,oninput:e=>{f.goal=Math.max(0,parseInt(e.target.value,10)||0);}})),
+        h("p",{class:"hint"},"Changing a cadence applies from each person’s next check-in."),
+        h("button",{class:"btn primary",disabled:!canWrite(),onclick:async()=>{
+          try{await withRetry(()=>rootRef.set({settings:{cad:f.cad,goal:f.goal}}));toast("Settings saved");}catch(e){toast(errMsg(e));}
+        }},"Save settings")),
+      backupCard(),
+      h("div",{class:"card",style:"margin-top:10px"},
+        h("h4",{style:"margin:0 0 6px"},"Export"),
+        h("p",{class:"hint",style:"margin:0 0 10px"},"A spreadsheet-friendly copy of everyone."),
+        h("div",{class:"actions",style:"margin:0"},
+          h("button",{class:"btn",onclick:()=>saveFile("keep-in-touch.csv",toCSV(),"text/csv")},"Download CSV"),
+          h("button",{class:"btn",onclick:()=>copy(toCSV())},"Copy CSV"))),
+      h("div",{class:"meta",id:"storageinfo",style:"margin-top:14px"}),
+      h("p",{class:"quote"},"Most people are so bad at keeping in touch that they will really appreciate you doing it. — Derek Sivers"));
+    storageInfo();
+  }
+};
+function csvCell(v){v=String(v==null?"":v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function toCSV(){
+  const cols=["name","tier","email","phone","city","tags","notes","lastContact","nextContact"];
+  return [cols.join(","),...S.contacts.map(c=>cols.map(k=>csvCell(k==="tags"?(c.tags||[]).join("; "):c[k])).join(","))].join("\n");
+}
+function backupJSON(){
+  return JSON.stringify({app:"keep-in-touch",format:1,exportedAt:new Date().toISOString(),settings:S.settings,contacts:S.contacts},null,2);
+}
+function backupName(){return "keep-in-touch-backup-"+today()+".json";}
+function saveFile(filename,data,type){
+  try{
+    const url=URL.createObjectURL(new Blob([data],{type:type||"application/octet-stream"}));
+    const a=h("a",{href:url,download:filename,style:"display:none"});
+    document.body.append(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),4000);
+    return true;
+  }catch(e){toast("Download failed. Use Copy instead.");return false;}
+}
+async function markBackedUp(){
+  try{await withRetry(()=>metaRef.set({lastBackup:today()}));}catch(e){}
+}
+async function downloadBackup(){
+  if(saveFile(backupName(),backupJSON(),"application/json")){await markBackedUp();toast("Backup saved to Downloads");}
+}
+const canShareFiles=()=>{try{return !!(navigator.canShare&&navigator.canShare({files:[new File(["x"],"t.json",{type:"application/json"})]}));}catch(e){return false;}};
+async function shareBackup(){
+  try{
+    await navigator.share({files:[new File([backupJSON()],backupName(),{type:"application/json"})],title:"Keep in Touch backup"});
+    await markBackedUp();toast("Backup shared");
+  }catch(e){if(e&&e.name!=="AbortError") toast("Couldn't share. Use Download instead.");}
+}
+function backupCard(){
+  const file=h("input",{type:"file",accept:".json,application/json",style:"display:none"});
+  const status=h("div",{class:"meta",id:"backupstatus",style:"margin-top:10px"});
+  const confirmBox=h("div",{});
+  file.addEventListener("change",async()=>{
+    const f=file.files[0]; file.value=""; if(!f) return;
+    let data; try{data=JSON.parse(await f.text());}catch(e){toast("That file isn't a valid backup");return;}
+    const list=Array.isArray(data)?data:(data&&Array.isArray(data.contacts)?data.contacts:null);
+    if(!list){toast("That file isn't a Keep in Touch backup");return;}
+    const rows=list.filter(c=>c&&c.name);
+    confirmBox.replaceChildren(h("div",{class:"banner",style:"margin:10px 0 0"},
+      "Restore "+rows.length+" people from this backup? People with the same ID are overwritten; everyone else is kept.",
+      h("div",{class:"actions"},
+        h("button",{class:"btn primary",onclick:async()=>{
+          confirmBox.replaceChildren(h("div",{class:"meta"},"Restoring…"));
+          let n=0;
+          for(const c of rows){
+            const {id,...rest}=c;
+            const ref=id&&/^[A-Za-z0-9_.~:@+-]{1,100}$/.test(id)?contactsCol.doc(id):contactsCol.doc();
+            try{await withRetry(()=>ref.set({...newContact(rest),...rest}));n++;}catch(e){toast(errMsg(e));break;}
+          }
+          if(data.settings&&data.settings.cad){try{await withRetry(()=>rootRef.set({settings:data.settings}));}catch(e){}}
+          confirmBox.replaceChildren();toast("Restored "+n+" people");
+        }},"Restore"),
+        h("button",{class:"btn ghost",onclick:()=>confirmBox.replaceChildren()},"Cancel"))));
+  });
+  setTimeout(paintBackupStatus,0);
+  return h("div",{class:"card",style:"margin-top:10px"},
+    h("h4",{style:"margin:0 0 6px"},"Backup & restore"),
+    h("p",{class:"hint",style:"margin:0 0 10px"},"Your contacts live only on this device. Back up regularly, and use a backup to move everything to another phone or computer."),
+    h("div",{class:"actions",style:"margin:0"},
+      canShareFiles()?h("button",{class:"btn primary",onclick:shareBackup},"Share backup (e.g. to Drive)"):null,
+      h("button",{class:canShareFiles()?"btn":"btn primary",onclick:downloadBackup},"Download backup"),
+      h("button",{class:"btn",onclick:()=>file.click()},"Restore from backup"),
+      file),
+    status,confirmBox);
+}
+function paintBackupStatus(){
+  const el=$("#backupstatus"); if(!el) return;
+  const lb=S.meta&&S.meta.lastBackup;
+  el.textContent=lb?("Last backup: "+fmtDate(lb)+" ("+rel(diffDays(today(),lb))+")"):"No backup yet.";
+}
+async function storageInfo(){
+  const box=$("#storageinfo"); if(!box) return;
+  let txt="Stored on this device only.";
+  try{
+    if(navigator.storage&&navigator.storage.persisted){
+      const p=await navigator.storage.persisted();
+      txt+=p?" The browser has marked this storage as persistent.":" Storage isn't marked persistent yet; installing the app usually fixes that.";
+    }
+  }catch(e){}
+  box.textContent=txt;
+}
+
+/* ---------- DRAWER ---------- */
+function openDrawer(id){S.drawerId=id;S.drawerDirty=false;renderDrawer();$("#drawer").classList.add("on");$("#overlay").classList.add("on");$("#drawer").setAttribute("aria-hidden","false");}
+function closeDrawer(){S.drawerId=null;S.drawerDirty=false;$("#drawer").classList.remove("on");$("#overlay").classList.remove("on");$("#drawer").setAttribute("aria-hidden","true");}
+$("#overlay").addEventListener("click",closeDrawer);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&S.drawerId) closeDrawer();});
+function renderDrawer(){
+  const c=byId(S.drawerId), d=$("#drawer"); if(!c){closeDrawer();return;}
+  const t=today();
+  const f={name:c.name,tier:c.tier,email:c.email||"",phone:c.phone||"",city:c.city||"",tags:(c.tags||[]).join(", "),notes:c.notes||"",next:c.nextContact||t};
+  const dirty=()=>{S.drawerDirty=true;};
+  const inp=(k,type)=>h("input",{type,value:f[k],oninput:e=>{f[k]=e.target.value;dirty();}});
+  const nextI=h("input",{type:"date",value:f.next,oninput:e=>{f.next=e.target.value;dirty();}});
+  const draft={channel:"Message",note:""};
+  let delArmed=false;
+  const delBtn=h("button",{type:"button",class:"btn danger",disabled:!canWrite(),onclick:async()=>{
+    if(!delArmed){delArmed=true;delBtn.textContent="Really delete "+c.name+"?";setTimeout(()=>{delArmed=false;delBtn.textContent="Delete";},4000);return;}
+    try{await withRetry(()=>contactsCol.doc(c.id).delete());toast(c.name+" deleted");closeDrawer();}catch(e){toast(errMsg(e));}
+  }},"Delete");
+  const logArea=h("div",{});
+  const showLog=()=>{logArea.replaceChildren(h("button",{class:"btn primary",disabled:!canWrite(),onclick:()=>{logArea.replaceChildren(logForm(c,()=>showLog(),draft));}},"Log a check-in"));};
+  showLog();
+  d.replaceChildren(
+    h("div",{class:"dhead"},h("span",{class:"tier "+c.tier},c.tier),h("h2",{},c.name),h("button",{class:"btn ghost",onclick:closeDrawer,"aria-label":"Close"},"✕")),
+    h("div",{class:"meta"},"Next check-in: "+(c.nextContact?fmtDate(c.nextContact)+" ("+rel(diffDays(t,c.nextContact))+")":"—")+(c.lastContact?" · last "+rel(diffDays(t,c.lastContact)):"")),
+    contactLine(c),
+    h("div",{class:"actions"},logArea,h("button",{class:"btn",disabled:!canWrite(),onclick:()=>snooze(c,7)},"Snooze a week")),
+    h("div",{class:"section"},h("h4",{},"Details"),
+      h("form",{onsubmit:async e=>{
+        e.preventDefault();
+        if(!f.name.trim()){toast("Name is required");return;}
+        const upd={name:f.name.trim(),tier:f.tier,email:f.email.trim(),phone:f.phone.trim(),city:f.city.trim(),tags:splitTags(f.tags),notes:f.notes.trim(),nextContact:f.next||t};
+        await write(c.id,()=>contactsCol.doc(c.id).update(upd)).then(()=>{S.drawerDirty=false;toast("Saved");renderDrawer();}).catch(()=>{});
+      }},
+        h("label",{class:"f"},h("span",{},"Name"),inp("name","text")),
+        h("div",{class:"grid2"},
+          h("label",{class:"f"},h("span",{},"Tier"),tierSelect(f.tier,e=>{
+            f.tier=e.target.value;dirty();
+            let n=addDays(c.lastContact||t,cad(f.tier)); if(n<t) n=t; f.next=n; nextI.value=n;
+          })),
+          h("label",{class:"f"},h("span",{},"Next check-in"),nextI),
+          h("label",{class:"f"},h("span",{},"Email"),inp("email","email")),
+          h("label",{class:"f"},h("span",{},"Phone"),inp("phone","tel")),
+          h("label",{class:"f"},h("span",{},"City / place"),inp("city","text")),
+          h("label",{class:"f"},h("span",{},"Tags"),inp("tags","text"))),
+        h("label",{class:"f"},h("span",{},"Notes"),h("textarea",{value:f.notes,oninput:e=>{f.notes=e.target.value;dirty();}})),
+        h("div",{class:"row"},h("button",{class:"btn primary",type:"submit",disabled:!canWrite()},"Save changes"),h("span",{class:"grow"}),delBtn))),
+    h("div",{class:"section"},h("h4",{},"History"),
+      (c.log||[]).length?h("ul",{class:"hist"},c.log.map(l=>h("li",{},h("span",{class:"d"},fmtDate(l.date)),h("b",{},l.channel),l.note?" — "+l.note:"")))
+        :h("div",{class:"meta"},"No check-ins yet.")),
+    h("div",{class:"meta",style:"margin-top:14px"},"Added "+(c.createdAt?fmtDate(c.createdAt):"—")+(c.metOn?" · met "+fmtDate(c.metOn):""))
+  );
+}
+
+/* ---------- boot ---------- */
+go();
+(async()=>{
+  try{
+    if(!window.indexedDB||!window.LocalDB) throw new Error("no indexedDB");
+    db=await window.LocalDB.create();
+    uid="local";
+  }catch(e){console.error(e);S.status="nodb";buildView();return;}
+  try{if(navigator.storage&&navigator.storage.persist) navigator.storage.persist();}catch(e){}
+  rootRef=db.doc("data/users/"+uid+"/crm");
+  metaRef=db.doc("data/users/"+uid+"/meta");
+  contactsCol=rootRef.collection("contacts");
+  const onErr=e=>console.error(e);
+  rootRef.onSnapshot(s=>{
+    const d=s.exists?s.data():null;
+    S.settings={cad:{...DEF.cad,...((d&&d.settings&&d.settings.cad)||{})},goal:(d&&d.settings&&d.settings.goal!=null)?d.settings.goal:DEF.goal};
+    if(S.view!=="prefs"&&S.view!=="add"&&S.view!=="import") refresh();
+  },onErr);
+  metaRef.onSnapshot(s=>{S.meta=s.exists?s.data():{}; if(S.view==="today") refresh(); paintBackupStatus();},onErr);
+  contactsCol.onSnapshot(s=>{
+    S.contacts=s.docs.map(x=>({id:x.id,...x.data()})).filter(c=>c.name);
+    const first=S.status!=="ready"; S.status="ready";
+    if(first) buildView(); else refresh();
+  },onErr);
+})();
+
+/* ---------- installable app ---------- */
+if("serviceWorker" in navigator&&location.protocol!=="file:"){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(e=>console.error(e)));
+}
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;$("#installBtn").hidden=false;});
+$("#installBtn").addEventListener("click",async()=>{
+  if(!installEvt) return;
+  installEvt.prompt();
+  try{await installEvt.userChoice;}catch(e){}
+  installEvt=null;$("#installBtn").hidden=true;
+});
+window.addEventListener("appinstalled",()=>{$("#installBtn").hidden=true;toast("Installed. Find Keep in Touch on your home screen.");});
+</script>
+</body>
+</html>

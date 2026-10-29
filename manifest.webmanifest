@@ -1,0 +1,22 @@
+{
+  "name": "Keep in Touch",
+  "short_name": "Keep in Touch",
+  "description": "A tiny personal CRM: A list every 3 weeks, B every 2 months, C every 6 months, D once a year.",
+  "id": "./",
+  "start_url": "./#today",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f1ea",
+  "theme_color": "#f5f1ea",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Who's due today", "url": "./#today" },
+    { "name": "Add someone", "url": "./#add" }
+  ]
+}
