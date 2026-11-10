@@ -18,6 +18,11 @@ extension EnvironmentValues {
     @Entry var cadences = Cadences.standard
 }
 
+extension EnvironmentValues {
+    /// The selected tab, so a screen can switch to another one. Set by `RootView`.
+    @Entry var currentTab: Binding<AppTab> = .constant(.today)
+}
+
 struct TierBadge: View {
     let tier: Tier
     @Environment(\.cadences) private var cadences

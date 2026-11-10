@@ -38,7 +38,10 @@ struct KeepInTouchApp: App {
     }
 }
 
+enum AppTab: Hashable { case today, upcoming, people, settings }
+
 struct RootView: View {
+    @State private var tab = AppTab.today
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var scenePhase
     @Query private var people: [Person]
@@ -51,13 +54,14 @@ struct RootView: View {
 
     var body: some View {
         let today = Day.today().iso
-        TabView {
-            Tab("Today", systemImage: "sun.max") { TodayView() }
+        TabView(selection: $tab) {
+            Tab("Today", systemImage: "sun.max", value: AppTab.today) { TodayView() }
                 .badge(people.filter { $0.nextContact <= today }.count)
-            Tab("Upcoming", systemImage: "calendar") { UpcomingView() }
-            Tab("People", systemImage: "person.2") { PeopleView() }
-            Tab("Settings", systemImage: "gearshape") { SettingsView() }
+            Tab("Upcoming", systemImage: "calendar", value: AppTab.upcoming) { UpcomingView() }
+            Tab("People", systemImage: "person.2", value: AppTab.people) { PeopleView() }
+            Tab("Settings", systemImage: "gearshape", value: AppTab.settings) { SettingsView() }
         }
+        .environment(\.currentTab, $tab)
         .environment(\.cadences, Cadences(a: cadA, b: cadB, c: cadC, d: cadD))
         .task(id: refreshKey) {
             #if DEBUG
