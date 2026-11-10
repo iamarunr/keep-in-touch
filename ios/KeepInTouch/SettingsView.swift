@@ -1,4 +1,7 @@
 import CloudKit
+#if os(macOS)
+import ServiceManagement
+#endif
 import SwiftData
 import SwiftUI
 import UniformTypeIdentifiers
@@ -17,6 +20,10 @@ struct SettingsView: View {
     @AppStorage(Keys.countryCode) private var countryCode = "1"
     @AppStorage(Keys.iCloudSync) private var iCloudSync = true
     @State private var account: CKAccountStatus = .couldNotDetermine
+    #if os(macOS)
+    @State private var openAtLogin = SMAppService.mainApp.status == .enabled
+    @State private var loginMessage: String?
+    #endif
     @State private var importing = false
     @State private var message: String?
     @State private var remindersBlocked = false
@@ -70,6 +77,16 @@ struct SettingsView: View {
                     Text("Used for phone numbers saved without a country code. Digits only, for example 1 for the US or 44 for the UK.")
                 }
 
+                #if os(macOS)
+                Section {
+                    Toggle("Open at login", isOn: Binding(get: { openAtLogin }, set: setOpenAtLogin))
+                } header: {
+                    Text("Mac")
+                } footer: {
+                    Text(loginMessage ?? "Keeps the menu bar icon available after you restart or log in.")
+                }
+                #endif
+
                 Section {
                     Toggle("Sync with iCloud", isOn: $iCloudSync)
                 } header: {
@@ -98,6 +115,18 @@ struct SettingsView: View {
             }
         }
     }
+
+    #if os(macOS)
+    private func setOpenAtLogin(_ on: Bool) {
+        do {
+            if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
+            loginMessage = nil
+        } catch {
+            loginMessage = "Couldn't change this: \(error.localizedDescription)"
+        }
+        openAtLogin = SMAppService.mainApp.status == .enabled
+    }
+    #endif
 
     private var syncStatus: String {
         if let failure = Storage.failure, iCloudSync {
