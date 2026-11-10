@@ -83,7 +83,7 @@ struct AddPickedView: View {
         NavigationStack {
             Form {
                 if new.isEmpty {
-                    Text("Everyone you picked is already in Keep in Touch.").foregroundStyle(.secondary)
+                    Text("Everyone you picked is already in Been a While.").foregroundStyle(.secondary)
                 } else {
                     Section {
                         ForEach(new) { row in

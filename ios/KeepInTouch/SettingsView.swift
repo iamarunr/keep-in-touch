@@ -38,7 +38,7 @@ struct SettingsView: View {
                     Text("Reminders")
                 } footer: {
                     Text(remindersBlocked
-                         ? "Notifications are turned off for Keep in Touch. Turn them on in the Settings app, then try again."
+                         ? "Notifications are turned off for Been a While. Turn them on in the Settings app, then try again."
                          : "A notification on days when someone is due, listing who.")
                 }
 
