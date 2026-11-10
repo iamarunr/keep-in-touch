@@ -65,7 +65,13 @@ struct AddPickedView: View {
     @Query private var people: [Person]
     @State private var tiers: [String: Tier] = [:]
     @Environment(\.cadences) private var cadences
-    @State private var spread = true
+    /// Off scatters first reminders across each person's interval, which suits a big batch.
+    @State private var startToday: Bool
+
+    init(batch: PickedBatch) {
+        self.batch = batch
+        _startToday = State(initialValue: batch.rows.count <= 2)
+    }
 
     private var fresh: [PickedBatch.Row] {
         batch.rows.filter { people.firstMatching(email: $0.email, name: $0.name, contactIdentifier: $0.id) == nil }
@@ -91,15 +97,19 @@ struct AddPickedView: View {
                         if already > 0 { Text("\(already) already added, so \(already == 1 ? "it's" : "they're") left out.") }
                     }
                     Section {
-                        Menu("Set everyone to") {
-                            ForEach(Tier.allCases) { tier in
-                                Button(cadences.title(for: tier)) { for row in new { tiers[row.id] = tier } }
+                        if new.count > 1 {
+                            Menu("Set everyone to") {
+                                ForEach(Tier.allCases) { tier in
+                                    Button(cadences.title(for: tier)) { for row in new { tiers[row.id] = tier } }
+                                }
                             }
                         }
-                        Toggle("Spread first check-ins out", isOn: $spread)
+                        Toggle("Start today", isOn: $startToday)
                     } footer: {
-                        Text(spread ? "Each person's first check-in lands on a random day within their cycle, so they don't all come due today."
-                                    : "Everyone will be due today.")
+                        Text(startToday
+                             ? (new.count == 1 ? "\(new[0].name) goes on your Today list right away."
+                                               : "Everyone goes on your Today list right away.")
+                             : "First reminders are scattered over the coming weeks and months, so they don't all arrive at once.")
                     }
                 }
             }
@@ -119,7 +129,7 @@ struct AddPickedView: View {
         var rng = SystemRandomNumberGenerator()
         for row in rows {
             let tier = tiers[row.id] ?? .c
-            let next = spread ? Schedule.spread(tier: tier, cadences: cadences, today: today, using: &rng) : today
+            let next = startToday ? today : Schedule.spread(tier: tier, cadences: cadences, today: today, using: &rng)
             context.insert(Person(name: row.name, tier: tier, email: row.email, phone: row.phone, city: row.city,
                                   nextContact: next, contactIdentifier: row.id))
         }

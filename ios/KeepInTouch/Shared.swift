@@ -133,6 +133,7 @@ struct AddButton: View {
         Menu {
             Button("From Contacts", systemImage: "person.crop.circle.badge.plus") {
                 ContactPicker.shared.present { contacts in
+                    guard !contacts.isEmpty else { return }
                     // Wait for the picker to finish closing before showing the next sheet.
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { picked = PickedBatch(contacts: contacts) }
                 }
