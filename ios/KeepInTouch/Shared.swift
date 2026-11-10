@@ -134,13 +134,7 @@ struct AddButton: View {
     var body: some View {
         Menu {
             Button("From Contacts", systemImage: "person.crop.circle.badge.plus") {
-                Task {
-                    if await ContactPicker.canReadContacts() {
-                        searching = true
-                    } else {
-                        ContactPicker.shared.present { show($0) }
-                    }
-                }
+                searching = true
             }
             Button("Add by hand", systemImage: "square.and.pencil") { addingByHand = true }
         } label: {
@@ -148,7 +142,14 @@ struct AddButton: View {
         }
         .accessibilityLabel("Add people")
         .sheet(isPresented: $addingByHand) { AddPersonView() }
-        .sheet(isPresented: $searching) { ContactSearchPicker { show($0) } }
+        .sheet(isPresented: $searching) {
+            ContactSearchPicker { show($0) } onUseSystemPicker: {
+                // Wait for this sheet to finish closing before Apple's picker opens.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                    ContactPicker.shared.present { show($0) }
+                }
+            }
+        }
         .sheet(item: $picked) { AddPickedView(batch: $0) }
     }
 

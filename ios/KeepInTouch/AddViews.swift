@@ -6,19 +6,18 @@ import KeepInTouchCore
 
 /// Shows the system contact picker. It runs outside the app, so the app needs no Contacts
 /// permission and only ever sees the people you pick. It has no search when picking several
-/// people, so it's only the fallback for when `ContactSearchPicker` can't read Contacts.
+/// people, so it's only offered inside `ContactSearchPicker` when the app can't read all of Contacts.
 @MainActor
 final class ContactPicker: NSObject, CNContactPickerDelegate {
     static let shared = ContactPicker()
     private var onPick: (([CNContact]) -> Void)?
 
-    /// Asks for Contacts access the first time. True only with full access: with limited
-    /// access the app would see just a few people, and the system picker shows everyone.
-    static func canReadContacts() async -> Bool {
+    /// Asks for Contacts access the first time, then reports where it stands.
+    static func contactsAccess() async -> CNAuthorizationStatus {
         if CNContactStore.authorizationStatus(for: .contacts) == .notDetermined {
             _ = try? await CNContactStore().requestAccess(for: .contacts)
         }
-        return CNContactStore.authorizationStatus(for: .contacts) == .authorized
+        return CNContactStore.authorizationStatus(for: .contacts)
     }
 
     func present(onPick: @escaping ([CNContact]) -> Void) {
@@ -48,7 +47,11 @@ final class ContactPicker: NSObject, CNContactPickerDelegate {
 /// The app's own contact list: search, tick several people, then Add.
 struct ContactSearchPicker: View {
     let onDone: ([CNContact]) -> Void
+    /// Called when the person would rather use Apple's picker, which needs no permission.
+    let onUseSystemPicker: () -> Void
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
+    @State private var access: CNAuthorizationStatus = .notDetermined
     @State private var entries: [Entry] = []
     @State private var selected: Set<String> = []
     @State private var query = ""
@@ -88,6 +91,22 @@ struct ContactSearchPicker: View {
                 .accessibilityAddTraits(isOn ? .isSelected : [])
             }
             .listStyle(.plain)
+            .safeAreaInset(edge: .top) {
+                if access == .limited && !loading {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Been a While can only see the contacts you shared with it.")
+                            .font(.subheadline)
+                        HStack(spacing: 16) {
+                            Button("Allow all in Settings") { openSettings() }
+                            Button("Use Apple's list") { useSystemPicker() }
+                        }
+                        .font(.subheadline.weight(.medium))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal).padding(.vertical, 10)
+                    .background(.bar)
+                }
+            }
             // The toolbar is hidden while the search field is active, so Add also sits here.
             .safeAreaInset(edge: .bottom) {
                 if !selected.isEmpty {
@@ -102,6 +121,15 @@ struct ContactSearchPicker: View {
             .overlay {
                 if loading {
                     ProgressView()
+                } else if access == .denied || access == .restricted {
+                    ContentUnavailableView {
+                        Label("Search needs your contacts", systemImage: "person.crop.circle.badge.questionmark")
+                    } description: {
+                        Text("Been a While isn't allowed to read Contacts, so it can't search them. Turn on Contacts for Been a While in Settings, or pick from Apple's list, which has no search.")
+                    } actions: {
+                        Button("Open Settings") { openSettings() }.buttonStyle(.borderedProminent)
+                        Button("Use Apple's list") { useSystemPicker() }
+                    }
                 } else if entries.isEmpty {
                     ContentUnavailableView("No contacts", systemImage: "person.crop.circle")
                 } else if shown.isEmpty {
@@ -119,10 +147,20 @@ struct ContactSearchPicker: View {
                 }
             }
             .task {
-                entries = await Self.load()
+                access = await ContactPicker.contactsAccess()
+                if access == .authorized || access == .limited { entries = await Self.load() }
                 loading = false
             }
         }
+    }
+
+    private func openSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+    }
+
+    private func useSystemPicker() {
+        dismiss()
+        onUseSystemPicker()
     }
 
     private func finish() {

@@ -44,7 +44,7 @@ ios/
 ## Slices
 
 1. **Core loop (done).**
-   - Add people from a searchable contact list or by hand. The list needs Contacts permission (asked on first use); if it's declined or limited, Apple's picker is used, which needs no permission but has no search when picking several people.
+   - Add people from a searchable contact list or by hand. The list needs Contacts permission (asked on first use); if it's declined, the list explains why and offers Settings or Apple's picker, which needs no permission but has no search when picking several people. With limited access the list shows only the shared contacts, with the same two options.
    - Today and Upcoming lists, People with search.
    - Log a check-in, snooze a week, change how often, edit, delete.
    - Message, WhatsApp, Email and Call buttons; after one is tapped, the check-in sheet is waiting when you come back.
