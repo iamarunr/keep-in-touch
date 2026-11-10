@@ -141,16 +141,19 @@ struct AddButton: View {
             Image(systemName: "plus")
         }
         .accessibilityLabel("Add people")
-        .sheet(isPresented: $addingByHand) { AddPersonView() }
+        .sheet(isPresented: $addingByHand) { AddPersonView().sheetSize() }
         .sheet(isPresented: $searching) {
             ContactSearchPicker { show($0) } onUseSystemPicker: {
+                #if os(iOS)
                 // Wait for this sheet to finish closing before Apple's picker opens.
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                     ContactPicker.shared.present { show($0) }
                 }
+                #endif
             }
+            .sheetSize()
         }
-        .sheet(item: $picked) { AddPickedView(batch: $0) }
+        .sheet(item: $picked) { AddPickedView(batch: $0).sheetSize() }
     }
 
     private func show(_ contacts: [CNContact]) {

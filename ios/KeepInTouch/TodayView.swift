@@ -38,11 +38,11 @@ struct TodayView: View {
                 }
                 .padding()
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Color.pageBackground)
             .navigationTitle("Today")
             .toolbar { ToolbarItem(placement: .primaryAction) { AddButton() } }
             .navigationDestination(for: Person.self) { PersonDetailView(person: $0) }
-            .sheet(item: $draft) { CheckInSheet(person: $0.person, channel: $0.channel) }
+            .sheet(item: $draft) { CheckInSheet(person: $0.person, channel: $0.channel).sheetSize() }
         }
     }
 
@@ -63,7 +63,7 @@ private struct Stat: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 14))
         .accessibilityElement(children: .combine)
     }
 }
@@ -107,7 +107,7 @@ struct DueCard: View {
             .font(.subheadline)
         }
         .padding(14)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 14))
     }
 
     private var lastLine: String {
@@ -142,7 +142,7 @@ struct CheckInSheet: View {
                 }
             }
             .navigationTitle(person.name)
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Not yet") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {

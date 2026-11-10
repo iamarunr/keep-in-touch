@@ -62,7 +62,7 @@ struct SettingsView: View {
 
                 Section {
                     LabeledContent("Default country code") {
-                        TextField("1", text: $countryCode).keyboardType(.numberPad).multilineTextAlignment(.trailing)
+                        TextField("1", text: $countryCode).digitsEntry().multilineTextAlignment(.trailing)
                     }
                 } header: {
                     Text("WhatsApp")

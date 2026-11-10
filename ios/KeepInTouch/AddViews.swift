@@ -1,5 +1,7 @@
 import Contacts
+#if os(iOS)
 import ContactsUI
+#endif
 import SwiftData
 import SwiftUI
 import KeepInTouchCore
@@ -7,18 +9,11 @@ import KeepInTouchCore
 /// Shows the system contact picker. It runs outside the app, so the app needs no Contacts
 /// permission and only ever sees the people you pick. It has no search when picking several
 /// people, so it's only offered inside `ContactSearchPicker` when the app can't read all of Contacts.
+#if os(iOS)
 @MainActor
 final class ContactPicker: NSObject, CNContactPickerDelegate {
     static let shared = ContactPicker()
     private var onPick: (([CNContact]) -> Void)?
-
-    /// Asks for Contacts access the first time, then reports where it stands.
-    static func contactsAccess() async -> CNAuthorizationStatus {
-        if CNContactStore.authorizationStatus(for: .contacts) == .notDetermined {
-            _ = try? await CNContactStore().requestAccess(for: .contacts)
-        }
-        return CNContactStore.authorizationStatus(for: .contacts)
-    }
 
     func present(onPick: @escaping ([CNContact]) -> Void) {
         let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
@@ -43,6 +38,17 @@ final class ContactPicker: NSObject, CNContactPickerDelegate {
         MainActor.assumeIsolated { onPick = nil }
     }
 }
+#endif
+
+enum ContactsAccess {
+    /// Asks for Contacts access the first time, then reports where it stands.
+    static func request() async -> CNAuthorizationStatus {
+        if CNContactStore.authorizationStatus(for: .contacts) == .notDetermined {
+            _ = try? await CNContactStore().requestAccess(for: .contacts)
+        }
+        return CNContactStore.authorizationStatus(for: .contacts)
+    }
+}
 
 /// The app's own contact list: search, tick several people, then Add.
 struct ContactSearchPicker: View {
@@ -61,6 +67,15 @@ struct ContactSearchPicker: View {
         let id: String
         let name: String, detail: String
         let contact: CNContact
+    }
+
+    /// Only some contacts shared with the app. That choice exists on iPhone and iPad only.
+    private var isLimited: Bool {
+        #if os(iOS)
+        access == .limited
+        #else
+        false
+        #endif
     }
 
     private var shown: [Entry] {
@@ -92,13 +107,15 @@ struct ContactSearchPicker: View {
             }
             .listStyle(.plain)
             .safeAreaInset(edge: .top) {
-                if access == .limited && !loading {
+                if isLimited && !loading {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Been a While can only see the contacts you shared with it.")
                             .font(.subheadline)
                         HStack(spacing: 16) {
                             Button("Allow all in Settings") { openSettings() }
+                            #if os(iOS)
                             Button("Use Apple's list") { useSystemPicker() }
+                            #endif
                         }
                         .font(.subheadline.weight(.medium))
                     }
@@ -125,10 +142,16 @@ struct ContactSearchPicker: View {
                     ContentUnavailableView {
                         Label("Search needs your contacts", systemImage: "person.crop.circle.badge.questionmark")
                     } description: {
+                        #if os(iOS)
                         Text("Been a While isn't allowed to read Contacts, so it can't search them. Turn on Contacts for Been a While in Settings, or pick from Apple's list, which has no search.")
+                        #else
+                        Text("Been a While isn't allowed to read Contacts. Turn it on in System Settings, under Privacy & Security, Contacts.")
+                        #endif
                     } actions: {
                         Button("Open Settings") { openSettings() }.buttonStyle(.borderedProminent)
+                        #if os(iOS)
                         Button("Use Apple's list") { useSystemPicker() }
+                        #endif
                     }
                 } else if entries.isEmpty {
                     ContentUnavailableView("No contacts", systemImage: "person.crop.circle")
@@ -136,10 +159,19 @@ struct ContactSearchPicker: View {
                     ContentUnavailableView.search(text: query)
                 }
             }
+            #if os(iOS)
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search contacts")
+            #else
+            .safeAreaInset(edge: .top) {
+                TextField("Search contacts", text: $query)
+                    .textFieldStyle(.roundedBorder)
+                    .padding(.horizontal).padding(.vertical, 8)
+                    .background(.bar)
+            }
+            #endif
             .autocorrectionDisabled()
             .navigationTitle(selected.isEmpty ? "Contacts" : "\(selected.count) selected")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
@@ -147,15 +179,15 @@ struct ContactSearchPicker: View {
                 }
             }
             .task {
-                access = await ContactPicker.contactsAccess()
-                if access == .authorized || access == .limited { entries = await Self.load() }
+                access = await ContactsAccess.request()
+                if access == .authorized || isLimited { entries = await Self.load() }
                 loading = false
             }
         }
     }
 
     private func openSettings() {
-        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+        if let url = Platform.contactsSettingsURL { openURL(url) }
     }
 
     private func useSystemPicker() {
@@ -271,7 +303,7 @@ struct AddPickedView: View {
                 }
             }
             .navigationTitle(new.count == 1 ? "Add 1 person" : "Add \(new.count) people")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
@@ -318,10 +350,10 @@ struct AddPersonView: View {
                 }
                 Section {
                     TextField("Email", text: $email)
-                        .keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled()
-                    TextField("Phone", text: $phone).keyboardType(.phonePad)
+                        .emailEntry()
+                    TextField("Phone", text: $phone).phoneEntry()
                     TextField("City or place", text: $city)
-                    TextField("Tags, comma separated", text: $tags).textInputAutocapitalization(.never)
+                    TextField("Tags, comma separated", text: $tags).noCapitals()
                     TextField("Notes: how you met, what they care about", text: $notes, axis: .vertical).lineLimit(3...6)
                 }
                 Section {
@@ -336,7 +368,7 @@ struct AddPersonView: View {
                 }
             }
             .navigationTitle("Add someone")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {

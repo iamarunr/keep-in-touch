@@ -13,11 +13,28 @@ struct KeepInTouchApp: App {
     }
 
     var body: some Scene {
+        #if os(macOS)
+        Window("Been a While", id: "main") {
+            RootView()
+                .formStyle(.grouped)
+                .task { SettingsSync.start() }
+        }
+        .defaultSize(width: 480, height: 760)
+        .modelContainer(container)
+
+        MenuBarExtra {
+            MenuBarView().modelContainer(container)
+        } label: {
+            MenuBarLabel().modelContainer(container)
+        }
+        .menuBarExtraStyle(.window)
+        #else
         WindowGroup {
             RootView()
                 .task { SettingsSync.start() }
         }
         .modelContainer(container)
+        #endif
     }
 }
 

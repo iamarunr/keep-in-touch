@@ -27,11 +27,11 @@ struct PersonDetailView: View {
                     FrequencyOptions()
                 }
                 TextField("Email", text: $person.email)
-                    .keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled()
-                TextField("Phone", text: $person.phone).keyboardType(.phonePad)
+                    .emailEntry()
+                TextField("Phone", text: $person.phone).phoneEntry()
                 TextField("City or place", text: $person.city)
                 TextField("Tags, comma separated", text: $tagsText)
-                    .textInputAutocapitalization(.never)
+                    .noCapitals()
                     .onChange(of: tagsText) { person.tags = splitTags(tagsText) }
                 TextField("Notes: how you met, what they care about", text: $person.notes, axis: .vertical)
                     .lineLimit(3...8)
@@ -59,7 +59,7 @@ struct PersonDetailView: View {
             }
         }
         .navigationTitle(person.name)
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineTitle()
         .onAppear { tagsText = person.tags.joined(separator: ", ") }
         .sheet(item: $draft) { CheckInSheet(person: $0.person, channel: $0.channel) }
         .confirmationDialog("Delete \(person.name) and their check-in history?", isPresented: $confirmingDelete, titleVisibility: .visible) {

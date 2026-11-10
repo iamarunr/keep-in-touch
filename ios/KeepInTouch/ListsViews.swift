@@ -71,7 +71,7 @@ struct PeopleView: View {
             .searchable(text: $search, prompt: "Name, notes, place, tag")
             .navigationTitle("People")
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .leading) {
                     Picker("How often", selection: $tier) {
                         Text("Everyone").tag(Tier?.none)
                         ForEach(Tier.allCases) { Text(cadences.title(for: $0)).tag(Tier?.some($0)) }
