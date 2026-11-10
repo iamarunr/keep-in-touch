@@ -1,6 +1,8 @@
 # Handoff: Keep in Touch
 
-Status as of **2026-10-29**. Read this first when picking the project back up.
+Status as of **2026-11-09**. Read this first when picking the project back up.
+
+> **Direction change (2026-11-09):** the project is moving to a **native iOS app** in `ios/`. Contacts live on the phone, and the web app can't read them, send reminders, or open Messages/WhatsApp/Mail with a person filled in. A first working slice is scaffolded; see `docs/ios-plan.md`. The web app below stays live and unchanged. `docs/sync-plan.md` (Cloudflare D1) is shelved, because iCloud replaces it for the iOS app.
 
 ## What this is
 
@@ -8,7 +10,7 @@ A personal keep-in-touch app, based on Derek Sivers' "Stay in touch with hundred
 
 - **Live:** https://keep-in-touch-d58.pages.dev/ (Cloudflare Pages, auto-deploys on push to `main`)
 - **Repo:** https://github.com/iamarunr/keep-in-touch
-- **Version shown in Settings:** 7 (`APP_VERSION` in index.html, `VERSION` in sw.js is `kit-v7`)
+- **Version shown in Settings:** 8 (`APP_VERSION` in index.html, `VERSION` in sw.js is `kit-v8`)
 
 ## How we got here
 
@@ -104,7 +106,8 @@ Screenshots go to `tests/output/` (gitignored).
 - [ ] Confirm on iPhone: Settings shows **Version 5**, and a vCard import now saves.
 - [ ] Try the real Contact Picker on the Pixel (Import → Choose contacts).
 - [x] Warn when the app is opened on a Cloudflare preview address (`<hash>.keep-in-touch-d58.pages.dev`), since data there is separate. (Version 6: a banner links to the main address; `isPreviewHost()` in index.html, tests set `window.KIT_TEST_HOST`.)
-- [ ] Optional **sync**: Cloudflare Worker (static assets) + D1 with a private passphrase. `store.js` is the single seam to swap or extend.
+- [ ] **iOS app:** next slices are in `docs/ios-plan.md` (run on the phone, iCloud sync, stay linked to Contacts, notification actions, widget).
+- [ ] Shelved: web **sync** with a Cloudflare Pages Function + D1 (`docs/sync-plan.md`). Only worth building if the web app needs sync too.
 - [x] Web Share Target so a `.vcf` shared from another app opens straight into Import (Android). (Version 7: `share_target` in the manifest POSTs to `./share-target`; `sw.js` keeps the file in the `kit-share` cache and 303s to `./#import`, where `takeSharedFile()` feeds it into the normal vCard import.) **Still needs checking on a real Android device:** install the app, then share a contact from Contacts and pick Keep in Touch.
 - [ ] Optional: per-person "check-in message" templates or reminders (notifications would need a server or periodic background sync).
 - [ ] Optional: custom domain on Cloudflare.
