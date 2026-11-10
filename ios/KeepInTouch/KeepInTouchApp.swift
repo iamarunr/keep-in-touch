@@ -18,6 +18,10 @@ struct RootView: View {
     @Query private var people: [Person]
     @AppStorage(Keys.reminderOn) private var reminderOn = false
     @AppStorage(Keys.reminderMinutes) private var reminderMinutes = Keys.defaultReminderMinutes
+    @AppStorage(Keys.cadA) private var cadA = Cadences.standard.a
+    @AppStorage(Keys.cadB) private var cadB = Cadences.standard.b
+    @AppStorage(Keys.cadC) private var cadC = Cadences.standard.c
+    @AppStorage(Keys.cadD) private var cadD = Cadences.standard.d
 
     var body: some View {
         let today = Day.today().iso
@@ -28,6 +32,7 @@ struct RootView: View {
             Tab("People", systemImage: "person.2") { PeopleView() }
             Tab("Settings", systemImage: "gearshape") { SettingsView() }
         }
+        .environment(\.cadences, Cadences(a: cadA, b: cadB, c: cadC, d: cadD))
         .task(id: refreshKey) {
             #if DEBUG
             DemoData.seedIfAsked(context: context, existing: people)

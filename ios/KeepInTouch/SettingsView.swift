@@ -48,9 +48,9 @@ struct SettingsView: View {
                     cadence(.c, $cadC)
                     cadence(.d, $cadD)
                 } header: {
-                    Text("Check in every")
+                    Text("How often")
                 } footer: {
-                    Text("Changes apply from each person's next check-in.")
+                    Text("These are the four choices you get for each person. Changes apply from each person's next check-in.")
                 }
 
                 Section {
@@ -92,7 +92,7 @@ struct SettingsView: View {
             HStack {
                 TierBadge(tier: tier)
                 VStack(alignment: .leading) {
-                    Text(tier.label)
+                    Text(Cadences.every(days: days.wrappedValue))
                     Text("\(days.wrappedValue) days").font(.footnote).foregroundStyle(.secondary)
                 }
             }

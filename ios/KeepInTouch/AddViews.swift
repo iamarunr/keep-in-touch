@@ -64,6 +64,7 @@ struct AddPickedView: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var people: [Person]
     @State private var tiers: [String: Tier] = [:]
+    @Environment(\.cadences) private var cadences
     @State private var spread = true
 
     private var fresh: [PickedBatch.Row] {
@@ -81,7 +82,7 @@ struct AddPickedView: View {
                     Section {
                         ForEach(new) { row in
                             Picker(row.name, selection: Binding(get: { tiers[row.id] ?? .c }, set: { tiers[row.id] = $0 })) {
-                                ForEach(Tier.allCases) { Text($0.menuTitle).tag($0) }
+                                FrequencyOptions()
                             }
                         }
                     } header: {
@@ -92,12 +93,12 @@ struct AddPickedView: View {
                     Section {
                         Menu("Set everyone to") {
                             ForEach(Tier.allCases) { tier in
-                                Button(tier.menuTitle) { for row in new { tiers[row.id] = tier } }
+                                Button(cadences.title(for: tier)) { for row in new { tiers[row.id] = tier } }
                             }
                         }
                         Toggle("Spread first check-ins out", isOn: $spread)
                     } footer: {
-                        Text(spread ? "Each person's first check-in lands on a random day within their tier's cycle, so they don't all come due today."
+                        Text(spread ? "Each person's first check-in lands on a random day within their cycle, so they don't all come due today."
                                     : "Everyone will be due today.")
                     }
                 }
@@ -144,11 +145,9 @@ struct AddPersonView: View {
             Form {
                 Section {
                     TextField("Full name", text: $name).textContentType(.name)
-                    Picker("Tier", selection: $tier) {
-                        ForEach(Tier.allCases) { Text($0.menuTitle).tag($0) }
+                    Picker("Check in", selection: $tier) {
+                        FrequencyOptions()
                     }
-                } footer: {
-                    Text("Check in every \(Cadences.text(days: Keys.cadences().days(for: tier))).")
                 }
                 Section {
                     TextField("Email", text: $email)

@@ -37,11 +37,28 @@ public struct Cadences: Equatable, Sendable {
         return max(1, n)
     }
 
-    /// "3 weeks", "2 months", "year": the same wording the web app uses.
-    public static func text(days n: Int) -> String {
-        if n % 7 == 0 && n < 70 { return "\(n / 7) weeks" }
-        if (360...366).contains(n) { return "year" }
-        if n >= 58 { return "\(Int((Double(n) / 30.4).rounded())) months" }
-        return "\(n) days"
+    /// The amount and unit a number of days reads best as: 21 is 3 weeks, 60 is 2 months, 365 is 1 year.
+    private static func parts(days n: Int) -> (count: Int, unit: String, short: String) {
+        if n % 7 == 0 && n < 70 { return (n / 7, "week", "w") }
+        if (360...366).contains(n) { return (1, "year", "y") }
+        if n % 365 == 0 { return (n / 365, "year", "y") }
+        if n >= 58 { return (Int((Double(n) / 30.4).rounded()), "month", "mo") }
+        return (n, "day", "d")
     }
+
+    /// "Every 3 weeks", "Every 2 months", "Once a year".
+    public static func every(days n: Int) -> String {
+        let p = parts(days: n)
+        if p.count == 1 { return p.unit == "year" ? "Once a year" : "Every \(p.unit)" }
+        return "Every \(p.count) \(p.unit)s"
+    }
+
+    /// "3w", "2mo", "1y": short enough for a badge.
+    public static func short(days n: Int) -> String {
+        let p = parts(days: n)
+        return "\(p.count)\(p.short)"
+    }
+
+    public func title(for tier: Tier) -> String { Cadences.every(days: days(for: tier)) }
+    public func short(for tier: Tier) -> String { Cadences.short(days: days(for: tier)) }
 }

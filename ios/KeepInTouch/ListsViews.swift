@@ -44,6 +44,7 @@ struct PeopleView: View {
     @Query(sort: \Person.name) private var people: [Person]
     @State private var search = ""
     @State private var tier: Tier?
+    @Environment(\.cadences) private var cadences
 
     var body: some View {
         let today = Day.today()
@@ -71,9 +72,9 @@ struct PeopleView: View {
             .navigationTitle("People")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Picker("Tier", selection: $tier) {
-                        Text("All tiers").tag(Tier?.none)
-                        ForEach(Tier.allCases) { Text($0.menuTitle).tag(Tier?.some($0)) }
+                    Picker("How often", selection: $tier) {
+                        Text("Everyone").tag(Tier?.none)
+                        ForEach(Tier.allCases) { Text(cadences.title(for: $0)).tag(Tier?.some($0)) }
                     }
                 }
                 ToolbarItem(placement: .primaryAction) { AddButton() }

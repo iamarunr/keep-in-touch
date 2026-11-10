@@ -23,8 +23,8 @@ struct PersonDetailView: View {
 
             Section("Details") {
                 TextField("Name", text: $person.name)
-                Picker("Tier", selection: Binding(get: { person.tier }, set: { person.changeTier(to: $0) })) {
-                    ForEach(Tier.allCases) { Text($0.menuTitle).tag($0) }
+                Picker("Check in", selection: Binding(get: { person.tier }, set: { person.changeTier(to: $0) })) {
+                    FrequencyOptions()
                 }
                 TextField("Email", text: $person.email)
                     .keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled()

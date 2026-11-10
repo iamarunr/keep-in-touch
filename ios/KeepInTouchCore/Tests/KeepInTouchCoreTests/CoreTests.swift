@@ -67,10 +67,14 @@ import Testing
     }
 
     @Test func cadenceWording() {
-        #expect(Cadences.text(days: 21) == "3 weeks")
-        #expect(Cadences.text(days: 60) == "2 months")
-        #expect(Cadences.text(days: 182) == "6 months")
-        #expect(Cadences.text(days: 365) == "year")
+        let s = Cadences.standard
+        #expect(Tier.allCases.map(s.title) == ["Every 3 weeks", "Every 2 months", "Every 6 months", "Once a year"])
+        #expect(Tier.allCases.map(s.short) == ["3w", "2mo", "6mo", "1y"])
+        #expect(Cadences.every(days: 7) == "Every week")
+        #expect(Cadences.every(days: 1) == "Every day")
+        #expect(Cadences.every(days: 30) == "Every 30 days")
+        #expect(Cadences.every(days: 730) == "Every 2 years")
+        #expect(Cadences.short(days: 45) == "45d")
         #expect(Cadences(a: 0, b: 60, c: 182, d: 365).days(for: .a) == 1)
     }
 }

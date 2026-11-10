@@ -10,19 +10,25 @@ extension Tier {
         case .d: Color(red: 0.47, green: 0.44, blue: 0.40)
         }
     }
-    var menuTitle: String { "\(rawValue) · \(label)" }
+}
+
+extension EnvironmentValues {
+    /// The current check-in frequencies, set at the root from Settings so every label stays up to date.
+    @Entry var cadences = Cadences.standard
 }
 
 struct TierBadge: View {
     let tier: Tier
+    @Environment(\.cadences) private var cadences
 
     var body: some View {
-        Text(tier.rawValue)
-            .font(.footnote.weight(.semibold))
+        Text(cadences.short(for: tier))
+            .font(.caption.weight(.semibold))
+            .lineLimit(1).minimumScaleFactor(0.7)
             .foregroundStyle(.white)
-            .frame(width: 26, height: 26)
+            .frame(width: 38, height: 26)
             .background(tier.color, in: RoundedRectangle(cornerRadius: 7))
-            .accessibilityLabel("Tier \(tier.rawValue), \(tier.label)")
+            .accessibilityLabel(cadences.title(for: tier))
     }
 }
 
@@ -107,6 +113,15 @@ struct CheckInDraft: Identifiable {
     let id = UUID()
     let person: Person
     var channel: String
+}
+
+/// The choices in every "how often" picker.
+struct FrequencyOptions: View {
+    @Environment(\.cadences) private var cadences
+
+    var body: some View {
+        ForEach(Tier.allCases) { Text(cadences.title(for: $0)).tag($0) }
+    }
 }
 
 /// The "+" in each tab's toolbar.
