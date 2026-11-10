@@ -8,6 +8,7 @@ enum Keys {
     static let reminderOn = "reminder.on"
     static let reminderMinutes = "reminder.minutes"   // minutes after midnight
     static let countryCode = "whatsapp.countryCode"
+    static let iCloudSync = "icloud.sync"             // read once at launch; see Storage
 
     static let defaultReminderMinutes = 9 * 60
     static let defaultGoal = 3

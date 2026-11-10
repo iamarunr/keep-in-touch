@@ -20,6 +20,7 @@ Read `HANDOFF.md` for history, architecture, data model, gotchas and open items.
 - **Stack:** SwiftUI + SwiftData, iOS 18+, no third-party dependencies. Logic with no UI lives in the `KeepInTouchCore` Swift package.
 - **Tests:** `cd ios/KeepInTouchCore && swift test` (runs on the Mac, no simulator). Add a test for any rule you change in the package.
 - **Project file:** `KeepInTouch.xcodeproj` uses folder-synced groups, so new files in `ios/KeepInTouch/` need no project edits.
+- **iCloud sync is on** (`ios/KeepInTouch/Sync.swift`). The simulator isn't signed in to iCloud, so it always runs local-only and can't test sync.
 - **Models stay CloudKit-ready:** every property has a default, relationships are optional, no unique constraints.
 - **Personal values** (team ID, bundle ID) go in `ios/Local.xcconfig`, which is gitignored. Never put them in the project file.
 - **Dates** are `YYYY-MM-DD` strings via `Day`, the same as the web app's backup format.

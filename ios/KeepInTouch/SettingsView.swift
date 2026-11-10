@@ -1,3 +1,4 @@
+import CloudKit
 import SwiftData
 import SwiftUI
 import UniformTypeIdentifiers
@@ -14,6 +15,8 @@ struct SettingsView: View {
     @AppStorage(Keys.cadD) private var cadD = Cadences.standard.d
     @AppStorage(Keys.goal) private var goal = Keys.defaultGoal
     @AppStorage(Keys.countryCode) private var countryCode = "1"
+    @AppStorage(Keys.iCloudSync) private var iCloudSync = true
+    @State private var account: CKAccountStatus = .couldNotDetermine
     @State private var importing = false
     @State private var message: String?
     @State private var remindersBlocked = false
@@ -68,6 +71,15 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Toggle("Sync with iCloud", isOn: $iCloudSync)
+                } header: {
+                    Text("iCloud")
+                } footer: {
+                    Text(syncStatus)
+                }
+                .task { account = await Storage.accountStatus() }
+
+                Section {
                     Button("Import a web app backup", systemImage: "square.and.arrow.down") { importing = true }
                 } header: {
                     Text("Move from the web app")
@@ -84,6 +96,34 @@ struct SettingsView: View {
             .fileImporter(isPresented: $importing, allowedContentTypes: [.json]) { result in
                 message = importBackup(result)
             }
+        }
+    }
+
+    private var syncStatus: String {
+        if let failure = Storage.failure, iCloudSync {
+            return "Not syncing: the synced store couldn't be opened, so everything is staying on this device. Details: \(failure)"
+        }
+        if iCloudSync != Storage.syncing {
+            return "Close and reopen Been a While for this to take effect."
+        }
+        guard Storage.syncing else { return "Off. Everything stays on this device only." }
+        if let error = SyncMonitor.shared.lastError {
+            return "Syncing is on, but the last attempt failed. Details: \(error)"
+        }
+        switch account {
+        case .available:
+            if let last = SyncMonitor.shared.lastSuccess {
+                return "Last synced \(last.formatted(date: .abbreviated, time: .shortened)). Your people, check-ins and how-often settings are kept in your iCloud account and appear on your other devices. Reminder settings stay on this device."
+            }
+            return "Your people, check-ins and how-often settings are kept in your iCloud account and appear on your other devices. Reminder settings stay on this device."
+        case .noAccount:
+            return "Waiting: this device isn't signed in to iCloud. Sign in from the Settings app and syncing starts by itself."
+        case .restricted:
+            return "Waiting: iCloud is restricted on this device, so nothing can sync."
+        case .temporarilyUnavailable:
+            return "Waiting: iCloud is temporarily unavailable. Syncing resumes by itself."
+        default:
+            return "Checking iCloud…"
         }
     }
 

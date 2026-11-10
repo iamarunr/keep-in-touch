@@ -4,11 +4,20 @@ import KeepInTouchCore
 
 @main
 struct KeepInTouchApp: App {
+    private let container: ModelContainer
+
+    init() {
+        // Before the store opens, so the first sync events aren't missed.
+        container = Storage.makeContainer()
+        SyncMonitor.shared.start()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
+                .task { SettingsSync.start() }
         }
-        .modelContainer(for: [Person.self, CheckIn.self])
+        .modelContainer(container)
     }
 }
 
