@@ -11,7 +11,7 @@ A tiny personal CRM for keeping in touch with people, based on Derek Sivers' [St
 
 When you check in, just find out how they're doing and see if you can help.
 
-> **An iOS app is in progress** in [`ios/`](ios/): it picks people straight from Contacts, reminds you when someone is due, and opens Messages, WhatsApp or Mail in one tap. See [docs/ios-plan.md](docs/ios-plan.md). The web app described below keeps working as it is.
+> **An iOS app, called Been a While, is in progress** in [`ios/`](ios/): it picks people straight from Contacts, reminds you when someone is due, and opens Messages, WhatsApp or Mail in one tap. See [docs/ios-plan.md](docs/ios-plan.md). The web app described below keeps working as it is.
 
 ## What it does
 

@@ -16,6 +16,7 @@ Read `HANDOFF.md` for history, architecture, data model, gotchas and open items.
 
 ## iOS app (`ios/`)
 
+- **Name:** the app is called **Been a While** on the Home Screen and in its own messages. The folder, Xcode project, Swift package and bundle ID keep the KeepInTouch name. The web app is still Keep in Touch.
 - **Stack:** SwiftUI + SwiftData, iOS 18+, no third-party dependencies. Logic with no UI lives in the `KeepInTouchCore` Swift package.
 - **Tests:** `cd ios/KeepInTouchCore && swift test` (runs on the Mac, no simulator). Add a test for any rule you change in the package.
 - **Project file:** `KeepInTouch.xcodeproj` uses folder-synced groups, so new files in `ios/KeepInTouch/` need no project edits.

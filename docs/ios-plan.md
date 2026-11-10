@@ -1,6 +1,8 @@
-# Keep in Touch for iOS: plan
+# Been a While (Keep in Touch for iOS): plan
 
-Status: **first slice scaffolded in `ios/`.** Written 2026-11-09. Read `HANDOFF.md` for how the project got here.
+Status: **the core loop runs on a phone.** Written 2026-11-09, updated 2026-11-10.
+
+The iOS app is called **Been a While**. The folder, Xcode project, Swift package and bundle ID keep the KeepInTouch name, and the web app is still Keep in Touch. Read `HANDOFF.md` for how the project got here.
 
 ## Why native
 
@@ -16,8 +18,8 @@ The web app stays live and unchanged at its current address. It's still the vers
 
 ## What carries over from the web app
 
-- The method: tiers A/B/C/D with cadences of 21, 60, 182 and 365 days, all adjustable.
-- The rules: a check-in sets the next date from the tier; a tier change recalculates from the last check-in, never earlier than today; imports can be spread across each tier's cycle.
+- The method: four groups with check-ins every 21, 60, 182 and 365 days, all adjustable. The code still calls them tiers A to D; the app shows the frequency ("Every 3 weeks") and never the letter.
+- The rules: a check-in sets the next date from the tier; a tier change recalculates from the last check-in, never earlier than today; new people either start today or have their first reminder scattered across their interval ("Start today", on by default for one or two people).
 - The data model, including dates as `YYYY-MM-DD` strings, which sort correctly and don't shift with time zones.
 - The JSON backup format (`{app, format: 1, settings, contacts}`), so the iOS app can import a web backup.
 
@@ -41,25 +43,30 @@ ios/
 
 ## Slices
 
-1. **Core loop (scaffolded).**
+1. **Core loop (done).**
    - Add people from the Contacts picker or by hand.
    - Today and Upcoming lists, People with search.
-   - Log a check-in, snooze a week, change tier, edit, delete.
+   - Log a check-in, snooze a week, change how often, edit, delete.
    - Message, WhatsApp, Email and Call buttons; after one is tapped, the check-in sheet is waiting when you come back.
    - A daily reminder at a time you choose, listing who's due, with the app badge showing the count.
    - Import a backup from the web app.
-2. **Run on your phone.** Set your team and a bundle ID in `Local.xcconfig`, plug in the phone, build. Then TestFlight if you want it on other devices without a cable.
+2. **Run on your phone (done for one phone, by cable).** Set your team and a bundle ID in `Local.xcconfig`, plug in the phone, build. Then TestFlight if you want it on other devices without a cable.
 3. **iCloud sync.** Add the iCloud capability with a CloudKit container, and switch the model container to `cloudKitDatabase: .automatic`. Move settings from `UserDefaults` to iCloud key-value storage. Needs the paid developer membership, which you have.
 4. **Stay linked to Contacts.** Today the picker copies name, phone, email and city at the moment you pick. With Contacts permission, the app can refresh those fields when a contact changes. The contact's identifier is already saved for this. Note that the identifier can differ between devices, so matching needs a fallback on phone or email.
 5. **Nicer reminders.** Notification actions (Message, Snooze) and a Home Screen widget showing who's due.
 6. **Backup and export** from the iOS app (JSON in the same format, plus CSV).
-7. **Publish.** MIT license (already decided), README section on building the iOS app, optionally the App Store.
+7. **Publish.** MIT license (already decided), README section on building the iOS app, optionally the App Store. An app called "Been a While - Remember time" is already on the App Store (checked 2026-11-10), so a listing would need a distinguishing name such as "Been a While: Keep in Touch".
 
 ## Sync
 
 `docs/sync-plan.md` planned a Cloudflare D1 server with a passphrase. For the iOS app, **iCloud replaces it**: the data syncs through your own iCloud account between iPhone, iPad and Mac, with no server to run and nothing for you to host for anyone else. Every user's data stays in their own iCloud.
 
 The D1 plan is only worth building if the web app needs sync too (Android or Windows). It's shelved, not deleted.
+
+## Look
+
+- **Icon:** two people inside a returning arrow, on black. Source drawing in `ios/design/icon.svg`; there is a greyscale copy for the tinted Home Screen style.
+- **Accent:** the purple of the icon's second person, darker in light mode and lighter in dark mode.
 
 ## Limits to know
 
