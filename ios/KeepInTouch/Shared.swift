@@ -1,3 +1,4 @@
+import Contacts
 import SwiftUI
 import KeepInTouchCore
 
@@ -128,14 +129,17 @@ struct FrequencyOptions: View {
 struct AddButton: View {
     @State private var addingByHand = false
     @State private var picked: PickedBatch?
+    @State private var searching = false
 
     var body: some View {
         Menu {
             Button("From Contacts", systemImage: "person.crop.circle.badge.plus") {
-                ContactPicker.shared.present { contacts in
-                    guard !contacts.isEmpty else { return }
-                    // Wait for the picker to finish closing before showing the next sheet.
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { picked = PickedBatch(contacts: contacts) }
+                Task {
+                    if await ContactPicker.canReadContacts() {
+                        searching = true
+                    } else {
+                        ContactPicker.shared.present { show($0) }
+                    }
                 }
             }
             Button("Add by hand", systemImage: "square.and.pencil") { addingByHand = true }
@@ -144,6 +148,13 @@ struct AddButton: View {
         }
         .accessibilityLabel("Add people")
         .sheet(isPresented: $addingByHand) { AddPersonView() }
+        .sheet(isPresented: $searching) { ContactSearchPicker { show($0) } }
         .sheet(item: $picked) { AddPickedView(batch: $0) }
+    }
+
+    private func show(_ contacts: [CNContact]) {
+        guard !contacts.isEmpty else { return }
+        // Wait for the picker to finish closing before showing the next sheet.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { picked = PickedBatch(contacts: contacts) }
     }
 }

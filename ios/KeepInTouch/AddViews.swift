@@ -5,11 +5,21 @@ import SwiftUI
 import KeepInTouchCore
 
 /// Shows the system contact picker. It runs outside the app, so the app needs no Contacts
-/// permission and only ever sees the people you pick.
+/// permission and only ever sees the people you pick. It has no search when picking several
+/// people, so it's only the fallback for when `ContactSearchPicker` can't read Contacts.
 @MainActor
 final class ContactPicker: NSObject, CNContactPickerDelegate {
     static let shared = ContactPicker()
     private var onPick: (([CNContact]) -> Void)?
+
+    /// Asks for Contacts access the first time. True only with full access: with limited
+    /// access the app would see just a few people, and the system picker shows everyone.
+    static func canReadContacts() async -> Bool {
+        if CNContactStore.authorizationStatus(for: .contacts) == .notDetermined {
+            _ = try? await CNContactStore().requestAccess(for: .contacts)
+        }
+        return CNContactStore.authorizationStatus(for: .contacts) == .authorized
+    }
 
     func present(onPick: @escaping ([CNContact]) -> Void) {
         let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
@@ -32,6 +42,115 @@ final class ContactPicker: NSObject, CNContactPickerDelegate {
 
     nonisolated func contactPickerDidCancel(_ picker: CNContactPickerViewController) {
         MainActor.assumeIsolated { onPick = nil }
+    }
+}
+
+/// The app's own contact list: search, tick several people, then Add.
+struct ContactSearchPicker: View {
+    let onDone: ([CNContact]) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var entries: [Entry] = []
+    @State private var selected: Set<String> = []
+    @State private var query = ""
+    @State private var loading = true
+
+    struct Entry: Identifiable, @unchecked Sendable {
+        let id: String
+        let name: String, detail: String
+        let contact: CNContact
+    }
+
+    private var shown: [Entry] {
+        let q = query.trimmingCharacters(in: .whitespaces)
+        guard !q.isEmpty else { return entries }
+        return entries.filter { $0.name.localizedCaseInsensitiveContains(q) || $0.detail.localizedCaseInsensitiveContains(q) }
+    }
+
+    var body: some View {
+        NavigationStack {
+            List(shown) { entry in
+                let isOn = selected.contains(entry.id)
+                Button {
+                    if isOn { selected.remove(entry.id) } else { selected.insert(entry.id) }
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
+                            .imageScale(.large)
+                            .foregroundStyle(isOn ? Color.accentColor : Color.secondary)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(entry.name).foregroundStyle(.primary)
+                            if !entry.detail.isEmpty {
+                                Text(entry.detail).font(.subheadline).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+                .accessibilityAddTraits(isOn ? .isSelected : [])
+            }
+            .listStyle(.plain)
+            // The toolbar is hidden while the search field is active, so Add also sits here.
+            .safeAreaInset(edge: .bottom) {
+                if !selected.isEmpty {
+                    Button(selected.count == 1 ? "Add 1 person" : "Add \(selected.count) people") { finish() }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
+                        .padding(.vertical, 8)
+                        .frame(maxWidth: .infinity)
+                        .background(.bar)
+                }
+            }
+            .overlay {
+                if loading {
+                    ProgressView()
+                } else if entries.isEmpty {
+                    ContentUnavailableView("No contacts", systemImage: "person.crop.circle")
+                } else if shown.isEmpty {
+                    ContentUnavailableView.search(text: query)
+                }
+            }
+            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search contacts")
+            .autocorrectionDisabled()
+            .navigationTitle(selected.isEmpty ? "Contacts" : "\(selected.count) selected")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Add") { finish() }.disabled(selected.isEmpty)
+                }
+            }
+            .task {
+                entries = await Self.load()
+                loading = false
+            }
+        }
+    }
+
+    private func finish() {
+        onDone(entries.filter { selected.contains($0.id) }.map(\.contact))
+        dismiss()
+    }
+
+    private static func load() async -> [Entry] {
+        await Task.detached(priority: .userInitiated) {
+            let keys: [CNKeyDescriptor] = [
+                CNContactFormatter.descriptorForRequiredKeys(for: .fullName),
+                CNContactOrganizationNameKey as CNKeyDescriptor,
+                CNContactEmailAddressesKey as CNKeyDescriptor,
+                CNContactPhoneNumbersKey as CNKeyDescriptor,
+                CNContactPostalAddressesKey as CNKeyDescriptor,
+            ]
+            var out: [Entry] = []
+            try? CNContactStore().enumerateContacts(with: CNContactFetchRequest(keysToFetch: keys)) { c, _ in
+                let email = c.emailAddresses.first.map { $0.value as String } ?? ""
+                let phone = c.phoneNumbers.first?.value.stringValue ?? ""
+                let name = CNContactFormatter.string(from: c, style: .fullName)
+                    ?? [c.organizationName, email, phone].first { !$0.isEmpty } ?? ""
+                guard !name.isEmpty else { return }
+                let detail = [c.organizationName, phone, email].first { !$0.isEmpty && $0 != name } ?? ""
+                out.append(Entry(id: c.identifier, name: name, detail: detail, contact: c))
+            }
+            return out.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        }.value
     }
 }
 

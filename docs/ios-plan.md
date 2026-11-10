@@ -44,7 +44,7 @@ ios/
 ## Slices
 
 1. **Core loop (done).**
-   - Add people from the Contacts picker or by hand.
+   - Add people from a searchable contact list or by hand. The list needs Contacts permission (asked on first use); if it's declined or limited, Apple's picker is used, which needs no permission but has no search when picking several people.
    - Today and Upcoming lists, People with search.
    - Log a check-in, snooze a week, change how often, edit, delete.
    - Message, WhatsApp, Email and Call buttons; after one is tapped, the check-in sheet is waiting when you come back.
@@ -52,7 +52,7 @@ ios/
    - Import a backup from the web app.
 2. **Run on your phone (done for one phone, by cable).** Set your team and a bundle ID in `Local.xcconfig`, plug in the phone, build. Then TestFlight if you want it on other devices without a cable.
 3. **iCloud sync.** Add the iCloud capability with a CloudKit container, and switch the model container to `cloudKitDatabase: .automatic`. Move settings from `UserDefaults` to iCloud key-value storage. Needs the paid developer membership, which you have.
-4. **Stay linked to Contacts.** Today the picker copies name, phone, email and city at the moment you pick. With Contacts permission, the app can refresh those fields when a contact changes. The contact's identifier is already saved for this. Note that the identifier can differ between devices, so matching needs a fallback on phone or email.
+4. **Stay linked to Contacts.** Today the picker copies name, phone, email and city at the moment you pick. The app now asks for Contacts permission for the searchable list, so it can refresh those fields when a contact changes. The contact's identifier is already saved for this. Note that the identifier can differ between devices, so matching needs a fallback on phone or email.
 5. **Nicer reminders.** Notification actions (Message, Snooze) and a Home Screen widget showing who's due.
 6. **Backup and export** from the iOS app (JSON in the same format, plus CSV).
 7. **Publish.** MIT license (already decided), README section on building the iOS app, optionally the App Store. An app called "Been a While - Remember time" is already on the App Store (checked 2026-11-10), so a listing would need a distinguishing name such as "Been a While: Keep in Touch".
